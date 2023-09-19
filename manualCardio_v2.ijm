@@ -77,9 +77,7 @@ function macroInfo(){
 	    +"");
 
 	   //+"<P4><font size=2> For more detailed instructions see "+"<p4><a href=https://www.protocols.io/edit/movie-timepoint-copytoclipboard-tool-chutt6wn>Protocols.io</a><h4> </P4>"
-	}
-
-
+}
 
 
 
@@ -100,6 +98,7 @@ macro "manualCardio Action Tool - Cf00T4d14M"
 	thDAPI= Dialog.getNumber();	
 	
 	run("Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width="+r+" pixel_height=+"+r+" voxel_depth=1.0000 frame=[0 sec] origin=0,0");
+	run("Set Measurements...", "area redirect=None decimal=2");
 	roiManager("Reset");
 	run("Clear Results");
 	MyTitle=getTitle();
@@ -115,7 +114,7 @@ macro "manualCardio Action Tool - Cf00T4d14M"
 
 	while(q){
 		run("Clear Results");
-		setTool("polygon");	
+		setTool("freehand");;	
 		roiManager("Show All");	// show to avoid drawing one already measured	
 		//roiManager("Show None");
 		waitForUser("Please, draw the cardiomyocyte and press ok when ready");
@@ -172,7 +171,7 @@ macro "manualCardio Action Tool - Cf00T4d14M"
 			IJ.renameResults("Results");
 		}
 		i=nResults;
-		setResult("Label", i, "C"+(i+1));		
+		setResult("[Label]", i, "C"+(i+1));		
 		setResult("Area CM (micra²)",i,a);
 		setResult("Equivalent diameter (micra)",i,d);
 		setResult("Area nucleus (micra²)",i,An);

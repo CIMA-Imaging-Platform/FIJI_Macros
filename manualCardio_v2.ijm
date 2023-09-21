@@ -144,24 +144,33 @@ macro "manualCardio Action Tool - Cf00T4d14M"
 		setOption("BlackBackground", false);
 		run("Convert to Mask");
 		run("Median...", "radius=1");
-		run("Keep Largest Region");
-		selectWindow("dapi");
-		close();
-		selectWindow("dapi-largest");
-		rename("dapi");
+		
+		//Check if nucleus inside the cell
+		
 		run("Create Selection");
-		run("Measure");
-		An=getResult("Area",1);
+		typeSelection=selectionType();
+
+		if (typeSelection != -1){
+			run("Keep Largest Region");
+			selectWindow("dapi");
+			close();
+			selectWindow("dapi-largest");
+			rename("dapi");
+			run("Create Selection");
+			run("Measure");
+			An=getResult("Area",1);
+		
+		}else{
+			An=0;
+		}
+		
 		selectWindow("dapi");	
 		close();
 		selectWindow("cm");	
 		run("Restore Selection");
-		waitForUser("Check the nucleus detection and press OK");
-		if(isOpen("cm")) {
-			selectWindow("cm");
-			close();
-		}	
-	
+		
+		close("cm");
+				
 		// WRITE RESULTS--
 		run("Clear Results");
 		if(File.exists(output+File.separator+MyTitle_short+".xls"))

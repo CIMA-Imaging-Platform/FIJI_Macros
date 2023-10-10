@@ -1,5 +1,5 @@
 /*
- * 3D COLOCALIZACION OF NEURON BIOMARKERS
+ * 3D COLOCALIZACION OF NEURO BIOMARKERS
  * Target User: Leyre Basurco y Leyre Ayerra
  *  
  *  Images: 
@@ -26,7 +26,6 @@
  *  setResult("Green-marker volume ("+unit+"^3)", i, Vg);
 	setResult("Red-marker volume ("+unit+"^3)", i, Vr);
 	setResult("Green-Red coloc volume ("+unit+"^3)", i, Vc); 
-	setResult("Ratio of coloc wrt total volume (%)", i, rCol); 
 	
 	Colocalization Image 
    
@@ -84,7 +83,7 @@ function infoMacro(){
 	    +"<p><font size=3  i>Quantification Results: </i></p>"
 	    +"<p><font size=2  i>AnalyzedImages_Coloc folder: Visualize Segmented Images</i></p>"
 	    +"<p><font size=2  i>Excel Colocalization_Results.xls</i></p>"
-	    +"<ul id=list-style-3><font size=2  i><li>Green-marker volume um^3</li><li>Red-marker volume um^3</li><li>Green-Red coloc volume um^3</li><li>Ratio of coloc wrt total volume (%)</li></ul>"
+	    +"<ul id=list-style-3><font size=2  i><li>Green-marker volume um^3</li><li>Red-marker volume um^3</li><li>Green-Red coloc volume um^3</li><li>Ratio of coloc wrt total volume (%): Normalize Metric taking into account total amount of both markers Ratio = Colocalized Volume  / (Volume marker 1 + Volume marker 2)</li></ul>"
 	    +"<h0><font size=5></h0>"
 	    +"");
 

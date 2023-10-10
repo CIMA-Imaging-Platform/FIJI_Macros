@@ -4,61 +4,6 @@
 // Background signal subtraction by manual measurement of basal signal
 
 
-/*
- * 3D COLOCALIZACION OF NEURON BIOMARKERS
- * Target User: Leyre Basurco y Leyre Ayerra
- *  
- *  Images: 
- *    - Confocal 3D Z stack Image. 2 Channel 
- *	  - 8 bit
- *	  - Voxel size: 0.3120x0.3120x0.53 micron^3
- *	  - Format .czi   
- *  
- *  GUI Requierments:
- *		// manual selection of analysis regions
- *		// automatic green and red signal detection in 3D
- *		// red-green 3D colocalization quantification
- *		  
- *	Action Tools:	  
- *	 Im - Single file processing
- *	 Dir - Batch mode
- *		  
- *  Important Parameters
- *    - Channel order cGreen=2, cRed=1, 
- *    - Thresholds: thGreen=30, thRed=30, 
- *    - Particle Size filter: minSizeGreen=20, minSizeRed=20;		
- *    
- *  OUTPUT: 
- *  setResult("Green-marker volume ("+unit+"^3)", i, Vg);
-	setResult("Red-marker volume ("+unit+"^3)", i, Vr);
-	setResult("Green-Red coloc volume ("+unit+"^3)", i, Vc); 
-	setResult("Ratio of coloc wrt total volume (%)", i, rCol); 
-	
-	Colocalization Image 
-   
- *  Author: Mikel Ariz 
- *  Commented by: Tomás Muñoz
- *  Date :changelog July 2021
- */
-
-//	MIT License
-//	Copyright (c) 2023 Tomas Muñoz tmsantoro@unav.es
-//	Permission is hereby granted, free of charge, to any person obtaining a copy
-//	of this software and associated documentation files (the "Software"), to deal
-//	in the Software without restriction, including without limitation the rights
-//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//	copies of the Software, and to permit persons to whom the Software is
-//	furnished to do so, subject to the following conditions:
-//	The above copyright notice and this permission notice shall be included in all
-//	copies or substantial portions of the Software.
-//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//	SOFTWARE.
-
 
 function infoMacro(){
 	scripttitle= "3D COLOCALIZACION OF NEURON FIBER BIOMARKERS  ";

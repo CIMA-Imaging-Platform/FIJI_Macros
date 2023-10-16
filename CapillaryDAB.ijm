@@ -59,7 +59,7 @@ function macroInfo(){
  *  version: 1.02 
  *  Author: Mikel Ariz  
  *  Commented by: Tomas Muñoz 2023 
- *  Date : // Changelog June 2021
+ *  Date : // Changelog June 2022
  *  
  */
 

@@ -1,23 +1,101 @@
-// changelog September 2022
-// Use DAPI to segment nuclei and determine cytoplasm as a ring of X microns around
+/*
+ * AUTOMATIC CLASIFICATION OF ATF4 +/- CELLS
+ * Target User: Maria Gonzalez
+ *  
+ *  Input Images: 
+ *    - Confocal IF - 2 Channel : Dapi + ATF4. 
+	  - 16 bit Images
+	  - Format .czi   
+ *  
+ *  GUI Requierments:
+	  - None
+ *  
+ *  Important Parameters
+	- Channel order: cDAPI=1, cATF4=2;  
+	- Pre-Processing: flagContrast=false, radSmooth=15;  
+	- Segmentation: 
+		Thresholding: thATF4=600, thNucl=660, 
+		prominence=50, cytoBand=0; 
+	- Classification: minMarkerPerc=15,
 
-// New features wrt to v2:
-// - Work with 32-bit images to avoid false positives when there is only background signal
-// - New thresholds for all markers (32-bit float images)
-// - Define min % of cell with positive expression of marker, instead of min number of pixels
+ *  OUTPUT:
+ *  QuantificationResults.xls
+		setResult("Label", i, MyTitle); 
+		setResult("# total cells", i, nCells); 
+		setResult("# ATF4+ cells", i, nATF4); 
+		setResult("Iavg of ATF4+ cells", i, Ipos);
+		setResult("Iavg of ATF4- cells", i, Ineg);
+		setResult("Istd of ATF4+ cells", i, Ipos_std);
+		setResult("Istd of ATF4- cells", i, Ineg_std); 
 
-// New features wrt to v3:
-// - Problem of eritrocites resulting in false detections of Foxp3+ or CD11b+ cells. Work with dual thresholds for those two markers: lowTH and highTH.
-//   Cell classification: CD11b > highTH && Foxp3 < lowTH --> CD11b+ cell
-//                        Foxp3 > highTH && CD11b < lowTH --> Foxp3+ cell
-//						  CD11b > highTH && Foxp3 > lowTH --> Eritrocite
-//						  Foxp3 > highTH && CD11b > lowTH --> Eritrocite
-//						  Foxp3 > lowTH  && CD11b > lowTH --> Eritrocite
+ *     
+ *  Author: Mikel Ariz 
+ *  Date : March 2023
+ *  Commented by : Tomás Muñoz 
+ */
 
-// New features wrt to v4:
-// - Detection of CD163+/CD11b+ cells (and update of CD163+ and CD11b+ counts)
-// - Higher threshold for CD163 to avoid false detections in patients with higher background for this marker
-// - Independent minMarkerPerc for Foxp3, so we can set it lower and detect better eritrocites (they tend to express CD11b more extensively than Foxp3)
+//	MIT License
+//	Copyright (c) 2023 Tomas Muñoz tmsantoro@unav.es
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights
+//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//	copies of the Software, and to permit persons to whom the Software is
+//	furnished to do so, subject to the following conditions:
+//	The above copyright notice and this permission notice shall be included in all
+//	copies or substantial portions of the Software.
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//	SOFTWARE.
+
+
+function infoMacro(){
+	scripttitle= "AUTOMATIC CLASIFICATION OF ATF4 +/- CELLS";
+	version= "1.03";
+	date= "March 2023";
+	
+	//image1="../templateImages/cartilage.jpg";
+	//descriptionActionsTools="
+	
+	showMessage("ImageJ Script", "<html>"
+		+"<style>h{margin-top: 5px; margin-bottom: 5px;} p{margin: 0px;padding: 0px;} ol{margin-left: 20px;padding: 5px;} #list-style-3 {list-style-type: circle;.container {max-width: 1200px; margin: 0 auto; padding: 0px; }</style>"
+	    +"<h1><font size=6 color=Teal href=https://cima.cun.es/en/research/technology-platforms/image-platforms>CIMA: Imaging Platform</h1>"
+	    +"<h1><font size=5 color=Purple><i>Software Development Service</i></h1>"
+	    +"<p><font size=2 color=Purple><i>ImageJ Macros</i></p>"
+	    +"<h2><font size=3 color=black>"+scripttitle+"</h2>"
+	    +"<p><font size=2>Modified by Tomas Mu&ntilde;oz Santoro</p>"
+	    +"<p><font size=2>Version: "+version+" ("+date+")</p>"
+	    +"<p><font size=2> contact tmsantoro@unav.es</p>" 
+	    +"<p><font size=2> Available for use/modification/sharing under the "+"<p4><a href=https://opensource.org/licenses/MIT/>MIT License</a></p>"
+	    +"<h2><font size=3 color=black>Developed for</h2>"
+	    +"<p><font size=3  i>Input Images</i></p>"
+	    +"<ul><font size=2  i><li>Confocal IF - 2 Channel : Dapi + ATF4. </li><li>Resolution: unknown</li<li>Format .czi </li></i></ul>"
+	    +"<p><font size=3 i>Action tools (Buttons)</i></p>"
+	   	+"<ol><font size=2  i><li>Im : Single File Analysis: </li>"
+	    +"<li> DIR: Batch Mode. Select Folder: All images within the folder will be quantified .</li></ol>"
+	    +"<p><font size=3  i>Steps for the User</i></p><ol><li>Select File</li><li>Press Im or DIR </li><li>Introduce Parameters: Please tune the parameters for each image batch</li></ol>"
+	    +"<p><font size=3  i>PARAMETERS:</i></p>"
+	    +"<ul id=list-style-3><font size=2  i><li>DAPI Threshold:  (16 bit): Intensity Threshold to separate ATF4 + from ATF4 - Signal. Higher values will detect less Nuclei</li>"
+	    +"<li>Prominence for Local Maxima Detection: Separate joined Nucleus.</li>"
+	    +"<li>Radius for Smoothing: Use in case Dapi Signal not homogeneus inside each Nuclei.</li>"
+	    +"<li>Cytoplasm width (microns): Creates a simulated Cytoplasm by growing Nuclei.</li>"
+	    +"<li>ATF4 Theshold:  (16 bit): Intensity Threshold to separate ATF4 + from ATF4 - Signal. Higher values will detect less ATF4+. </li>"
+	    +"<li>Cell %: Minimum presence of ATF4 + area within the cell</li></ul>"
+	    +"<p><font size=3  i>Quantification Results:  </i></p>"
+	    +"<p><font size=3  i>AnalyzedImages folder: Visualize Segmented Images</i></p>"
+	    +"<p><font size=3  i>Excel QuantificationResults.xls</i></p>"
+	    +"<ul id=list-style-3><font size=2  i><li>Image Label</li><li>Total # Cells</li><li>Total # of ATF4+ Cells</li>"
+	    +"<li>ATF4 Mean and Std Intensity ATF4+ Cells</li><li>ATF4 Mean and Std Intensity ATF4- Cells</li></ul>"
+	    +"<h0><font size=5></h0>"
+	    +"");
+
+	   //+"<P4><font size=2> For more detailed instructions see "+"<p4><a href=https://www.protocols.io/edit/movie-timepoint-copytoclipboard-tool-chutt6wn>Protocols.io</a><h4> </P4>"
+	}
+
 
 
 var prominence=50, cytoBand=0;
@@ -25,6 +103,8 @@ var cDAPI=1, cATF4=2;
 var minMarkerPerc=15, thATF4=600, thNucl=660, flagContrast=false, radSmooth=15;
 
 macro "QIF Action Tool 1 - Cf00T2d15IT6d10m"{
+
+	infoMacro();
 
 	run("Close All");
 	
@@ -36,28 +116,30 @@ macro "QIF Action Tool 1 - Cf00T2d15IT6d10m"{
 	print("Processing "+name);
 	
 	Dialog.create("Parameters for the analysis");
-	Dialog.addCheckbox("Adjust contrast", flagContrast);
 	// Cell segmentation options:
 	//modeArray=newArray("Default","Otsu","IsoData","Moments","Triangle","MaxEntropy","Minimum");
 	Dialog.addMessage("Cell segmentation")
 	//Dialog.addRadioButtonGroup("Thresholding method for DAPI", modeArray, 1, 7, "Default");
 	Dialog.addNumber("DAPI threshold", thNucl);
-	Dialog.addNumber("Prominence for maxima detection", prominence);
+	Dialog.addNumber("Prominence for local maxima detection", prominence);
 	Dialog.addNumber("Radius for smoothing", radSmooth);
 	Dialog.addNumber("Cytoplasm width (microns)", cytoBand);
+	Dialog.addCheckbox("Adjust contrast", flagContrast);
+
 	// Markers' segmentation options:
 	Dialog.addMessage("ATF4 segmentation")
 	Dialog.addNumber("ATF4 threshold", thATF4)
 	Dialog.addNumber("Min presence of positive marker per cell (%)", minMarkerPerc);
 	
 	Dialog.show();	
-	flagContrast= Dialog.getCheckbox();
 	//thMethodNucl=Dialog.getRadioButton();
 	thNucl= Dialog.getNumber();
 	prominence= Dialog.getNumber();
 	radSmooth= Dialog.getNumber();
 	cytoBand= Dialog.getNumber();
-	//thMethodTum=Dialog.getRadioButton();	
+	flagContrast= Dialog.getCheckbox();
+
+//thMethodTum=Dialog.getRadioButton();	
 	thATF4= Dialog.getNumber();
 	minMarkerPerc= Dialog.getNumber();
 

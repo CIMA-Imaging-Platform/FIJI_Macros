@@ -189,9 +189,9 @@ function ifnuclcyto3d(output,InDir,name,thBlue,thGreen,erodeRad,prominence,smoot
 	}
 	
 	Stack.setDisplayMode("composite");
-	Stack.setChannel(1);
-	run("Blue");
 	Stack.setChannel(2);
+	run("Blue");
+	Stack.setChannel(1);
 	run("Green");
 	
 	
@@ -277,7 +277,6 @@ function ifnuclcyto3d(output,InDir,name,thBlue,thGreen,erodeRad,prominence,smoot
 	setThreshold(thGreen, 255);
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
-	;
 	run("Median...", "radius=1");
 	run("Fill Holes");
 	run("Analyze Particles...", "size=2.5-Infinity show=Masks exclude in_situ");

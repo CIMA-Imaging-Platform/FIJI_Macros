@@ -111,7 +111,7 @@ Table.showRowIndexes(false);
 
 var cDAPI=1, cRod=2;  
 var thNucl=90, thPhen=60, minMarkerPerc=5; 
-var flagContrast=false, radSmooth=2, prominence=10, cytoBand=0;
+var flagContrast=false, radSmooth=2, prominence=15, cytoBand=0;
 	
 
 /*SINGLE FILE*/

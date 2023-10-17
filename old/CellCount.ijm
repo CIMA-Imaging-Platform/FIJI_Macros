@@ -9,7 +9,7 @@ function macroInfo(){
 // * Target User: General
 // *  
 
-	scripttitle= "Quantifiaction of Cell Phenotype on Selected Channel";
+	scripttitle= "Quantifiaction of Cell Phenotype on selected channel";
 	version= "1.03";
 	date= "2018";
 	

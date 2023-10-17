@@ -62,7 +62,7 @@
 
 function info(){
 	
-	scripttitle= "TOOL for AUTOMATIC CLASSIFICATION OF CELL PHENOTYPES";
+	scripttitle= "AUTOMATIC CLASSIFICATION OF CELL PHENOTYPES on InmunoFlourescence Images";
 	version= "1.02¡3";
 	date= "22/06/2023";
 	

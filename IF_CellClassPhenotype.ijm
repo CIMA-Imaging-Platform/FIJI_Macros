@@ -70,7 +70,7 @@ function macroInfo(){
 	//descriptionActionsTools="
 	
 	showMessage("ImageJ Script", "<html>"
-		+"<style>h{margin-top: 5px; margin-bottom: 5px;} p{margin: 0px;padding: 0px;} ol{margin-left: 20px;padding: 5px;} #list-style-3 {list-style-type: circle;.container {max-width: 1200px; margin: 0 auto; padding: 0px; }</style>"
+		+"<style>h{margin-top: 5px; margin-bottom: 5px;} p{margin: 0px;padding: 0px;} ol{margin-left: 20px;padding: 5px;} #list-style-3 {list-style-type: circle;.container {max-width: 1800px; margin: 5px auto; padding: 0px; }</style>"
 	    +"<h1><font size=6 color=Teal href=https://cima.cun.es/en/research/technology-platforms/image-platforms>CIMA: Imaging Platform</h1>"
 	    +"<h1><font size=5 color=Purple><i>Software Development Service</i></h1>"
 	    +"<p><font size=2 color=Purple><i>ImageJ Macros</i></p>"
@@ -96,7 +96,7 @@ function macroInfo(){
 	    +"<p><font size=3  i>Quantification Results (Excel) </i></p>"
 	    +"<ul id=list-style-3><font size=2  i><li>ImageName</li><li>#Cells</li><li>Marker+ Cells</li><li>% Marker+ Cells</li><li>Mean and Std Intensity of Marker+ and Marker- Cells</li></i></ul>"
 	    +"<h0><font size=5> </h0>"
-	    +"");
+	    +"<h0><font size=5> </h0>");
 	    
 	  //+"<P4><font size=2> For more detailed instructions see "+"<p4><a href=https://www.protocols.io/edit/movie-timepoint-copytoclipboard-tool-chutt6wn>Protocols.io</a><h4> </P4>"
 	}

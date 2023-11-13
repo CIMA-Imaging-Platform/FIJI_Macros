@@ -27,12 +27,12 @@
  *   OUTPUT Results:
 		setResult("Label", i, MyTitle); 
 		setResult("# total cells", i, nCells); 
-		setResult("# Rod+ cells", i, nRod);
-		setResult("# % Rod+ cells", i, nRod/nCells);
-		setResult("Iavg of Rod+ cells", i, Ipos);
-		setResult("Iavg of Rod- cells", i, Ineg);
-		setResult("Istd of Rod+ cells", i, Ipos_std);
-		setResult("Istd of Rod- cells", i, Ineg_std); 
+		setResult("# phenotype+ cells", i, nRod);
+		setResult("# % phenotype+ cells", i, nRod/nCells);
+		setResult("Iavg of phenotype+ cells", i, Ipos);
+		setResult("Iavg of phenotype- cells", i, Ineg);
+		setResult("Istd of phenotype+ cells", i, Ipos_std);
+		setResult("Istd of phenotype- cells", i, Ineg_std); 
  *   
  *     
  *  Author: Tomás Muñoz Santoro
@@ -60,17 +60,17 @@
 //	SOFTWARE.
 
 
-function info(){
+function macroInfo(){
 	
 	scripttitle= "TOOL for AUTOMATIC CLASSIFICATION OF CELL PHENOTYPES";
-	version= "1.02¡3";
+	version= "1.023";
 	date= "22/06/2023";
 	
 	//image1="../templateImages/cartilage.jpg";
 	//descriptionActionsTools="
 	
 	showMessage("ImageJ Script", "<html>"
-		+"<style>h{margin-top: 5px; margin-bottom: 5px;} p{margin: 0px;padding: 0px;} ol{margin-left: 20px;padding: 5px;} #list-style-3 {list-style-type: circle;.container {max-width: 1200px; margin: 0 auto; padding: 0px; }</style>"
+		+"<style>h{margin-top: 5px; margin-bottom: 5px;} p{margin: 0px;padding: 0px;} ol{margin-left: 20px;padding: 5px;} #list-style-3 {list-style-type: circle;.container {max-width: 1800px; margin: 5px auto; padding: 0px; }</style>"
 	    +"<h1><font size=6 color=Teal href=https://cima.cun.es/en/research/technology-platforms/image-platforms>CIMA: Imaging Platform</h1>"
 	    +"<h1><font size=5 color=Purple><i>Software Development Service</i></h1>"
 	    +"<p><font size=2 color=Purple><i>ImageJ Macros</i></p>"
@@ -89,14 +89,14 @@ function info(){
 	    +"<p2><font size=3  i>Nuclear Segmentation: Please adjust Parameters to your images<p2>"
 	    +"<ul id=list-style-3><font size=2  i><li>DAPI threshold:Signal Threshold, Higher Number means Less Area Segmented</li>"
 	    +"<li>Prominence Maxima Detection: Difference between Signal Local Maximas. Higher Number multiple close cells could be segmented as just one.</li>"
-	    +"<li>Radius for smoothing: Use in case DAPI within the cell presents hetereginius signal.</li></ul></p2>"
+	    +"<li>Radius for smoothing: Use in case DAPI within the cell presents heterogeneus signal.</li></ul></p2>"
 	    +"<p><font size=3  i>Cell Phenotype Classification: Determine the theshold between +/- Cells</i></p>"
-	    +"<ul id=list-style-3><li>Phenotype Threshold: Signal Threshold to determine Positive and Negative Cells, Higher Number means Less Area Segmented</li>"
-	    +"</li>Cell %: min % Area within the cell with Marker. Higher % means, Less cells will be positive</ul>"
+	    +"<ul id=list-style-3><li>Phenotype Threshold(8bit): Signal Threshold to determine Positive and Negative Cells, Higher Number means Less Area Segmented</li>"
+	    +"<li>Cell %: min % Area within the cell with Marker. Higher % means, Less cells will be positive</li></ul>"
 	    +"<p><font size=3  i>Quantification Results (Excel) </i></p>"
 	    +"<ul id=list-style-3><font size=2  i><li>ImageName</li><li>#Cells</li><li>Marker+ Cells</li><li>% Marker+ Cells</li><li>Mean and Std Intensity of Marker+ and Marker- Cells</li></i></ul>"
 	    +"<h0><font size=5> </h0>"
-	    +"");
+	    +"<h0><font size=5> </h0>");
 	    
 	  //+"<P4><font size=2> For more detailed instructions see "+"<p4><a href=https://www.protocols.io/edit/movie-timepoint-copytoclipboard-tool-chutt6wn>Protocols.io</a><h4> </P4>"
 	}
@@ -111,13 +111,13 @@ Table.showRowIndexes(false);
 
 var cDAPI=1, cRod=2;  
 var thNucl=90, thPhen=60, minMarkerPerc=5; 
-var flagContrast=false, radSmooth=2, prominence=10, cytoBand=0;
+var flagContrast=false, radSmooth=2, prominence=15, cytoBand=0;
 	
 
 /*SINGLE FILE*/
 macro "QIF Action Tool 1 - Cf00T2d15IT6d10m"{
 
-	info();
+	macroInfo();
 	run("Close All");
 	wait(500);
 	run("Collect Garbage");
@@ -163,7 +163,7 @@ macro "QIF Action Tool 1 - Cf00T2d15IT6d10m"{
 macro "QIF Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 
 	
-	info();
+	macroInfo();
 	
 	run("Close All");
 	
@@ -429,7 +429,7 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	setResult("Label", i, MyTitle); 
 	setResult("# total cells", i, nCells); 
 	setResult("# "+phName+" cells", i, nRod);
-	setResult("# % "+phName+"+ cells", i, nRod/nCells);
+	setResult("# % "+phName+"+ cells", i, (nRod/nCells)*100);
 	setResult("Iavg of "+phName+"+ cells", i, Ipos);
 	setResult("Iavg of "+phName+"- cells", i, Ineg);
 	setResult("Istd of "+phName+"+ cells", i, Ipos_std);
@@ -479,7 +479,7 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	rename(MyTitle_short+"_analyzed.jpg");
 
 	
-	//Flatten ROIS Rhodamine channel
+	//Flatten ROIS Phenotype channel
 	selectWindow(MyTitle);
 	run("Select None");
 	run("Duplicate...", "title=Rod duplicate channels="+cRod);
@@ -496,9 +496,9 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	roiManager("rename", "Rod+");
 	roiManager("Set Line Width", 1);
 	run("Flatten");
-	saveAs("Jpeg", OutDir+File.separator+MyTitle_short+"_Rhodamine.jpg");
+	saveAs("Jpeg", OutDir+File.separator+MyTitle_short+"_"+phName+".jpg");
 	wait(200);
-	rename(MyTitle_short+"_Rhodamine.jpg");
+	rename(MyTitle_short+"_"+phName+".jpg");
 	
 	close("orig");
 	close("m*");

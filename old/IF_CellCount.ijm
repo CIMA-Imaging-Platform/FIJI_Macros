@@ -9,17 +9,17 @@ function macroInfo(){
 // * Target User: General
 // *  
 
-	scripttitle= "Quantifiaction of Cell Phenotype on Selected Channel";
+	scripttitle= "Quantifiaction of Cell on Selected Channel";
 	version= "1.03";
 	date= "2018";
 	
 
 // *  Tests Images:
 
-	imageAdquisition="Aperio: BrightField Whole Slide Images.";
-	imageType="RGB";  
+	imageAdquisition="Confocal 3D ZSTACK channel DAPI or marker of interest";
+	imageType="3D Z Stack ";  
 	voxelSize="Voxel size:  0.502 um xy";
-	format="Format: Uncompressed .jpg";   
+	format="Format: Uncompressed .czi or tiff";   
  
  //*  GUI User Requierments:
  //*    - Choose parameters.
@@ -45,6 +45,7 @@ function macroInfo(){
 	feature1="Image Label";
 	feature2="# cells";
 	feature3="AverageSize [micras^2]";
+	feature4="stdSize [micras^2]"
 	
 /*  	  
  *  version: 1.02 
@@ -101,7 +102,7 @@ function macroInfo(){
 	    +"<p><font size=3  i>Quantification Results: </i></p>"
 	    +"<p><font size=3 i>AnalyzedImages folder: Visualize Segmented Images</i></p>"
 	    +"<p><font size=3  i>Excel "+excel+"</i></p>"
-	    +"<ul id=list-style-3><font size=2  i><li>"+feature1+"</li><li>"+feature2+"</li><li>"+feature3+"</li></ul>"
+	    +"<ul id=list-style-3><font size=2  i><li>"+feature1+"</li><li>"+feature2+"</li><li>"+feature3+"</li><li>"+feature4+"</li></ul>"
 	    +"<h0><font size=5></h0>"
 	    +"");
 
@@ -110,23 +111,112 @@ function macroInfo(){
 
 
 
-var ch=1, th=20, minParticleSize=20, r=0.502, prominence=5, circularity=0.8;
+var ch=1, th=20, minParticleSize=20, r=0.502, prominence=1, circularity=0.0;
 
-macro "CellCountAuto Action Tool - C0f0T4d14C"{	
+
+macro "cellCount Action Tool 1 - Cf00T2d15IT6d10m"{
 	
+	close("*");
+	
+	macroInfo();
+	
+	
+	run("ROI Manager...");
+	
+	//just one file
+	name=File.openDialog("Select File");
+	//print(name);
+	print("Processing "+name);
+	
+		
+	Dialog.create("Parameters");
+	Dialog.addMessage("Choose parameters");
+	Dialog.addNumber("Objective Scale", r);
+	Dialog.addNumber("Channel to Quantify", ch);
+    Dialog.addNumber("Min particle size (px)", minParticleSize);
+    Dialog.addNumber("Circularity Filter)", circularity);	
+	Dialog.show();
+	r= Dialog.getNumber();
+	ch= Dialog.getNumber();
+	minParticleSize= Dialog.getNumber(); 
+	circularity= Dialog.getNumber(); 		
+	
+	//setBatchMode(true);
+	cellCount("-","-",name,r,ch,minParticleSize,circularity);
+			
+	setBatchMode(false);
+	showMessage("Cells quantified!");
+
+}
+
+macro "cellCount Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
+	
+	close("*");
+	
+	macroInfo();
+	
+	run("ROI Manager...");
+	
+	InDir=getDirectory("Choose Tiles' directory");
+	list=getFileList(InDir);
+	L=lengthOf(list);
+
+	Dialog.create("Parameters");
+	Dialog.addMessage("Choose parameters");
+	Dialog.addNumber("Objective Scale", r);
+	Dialog.addNumber("Channel to Quantify", ch);
+    Dialog.addNumber("Min particle size (px)", minParticleSize);
+    Dialog.addNumber("Circularity Filter)", circularity);	
+	Dialog.show();
+	r= Dialog.getNumber();
+	ch= Dialog.getNumber();
+	minParticleSize= Dialog.getNumber(); 
+	circularity= Dialog.getNumber(); 		
+	
+	for (j=0; j<L; j++)
+	{
+		if(endsWith(list[j],"czi")){
+			//analyze
+			//d=InDir+list[j]t;
+			name=list[j];
+			print("Processing "+name);
+			//setBatchMode(true);
+			cellCount(InDir,InDir,list[j],r,ch,minParticleSize,circularity);
+			setBatchMode(false);
+			}
+	}
+	
+	showMessage("Cells quantified!");
+
+}
+
+
+function cellCount(output,InDir,name,r,ch,minParticleSize,circularity)
+{	
+
+	run("Close All");
+
+	if (InDir=="-") {
+		run("Bio-Formats Importer", "open=["+name+"] autoscale color_mode=Colorized rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT series_1");
+		}
+	else {
+		run("Bio-Formats Importer", "open=["+InDir+name+"] autoscale color_mode=Colorized rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT series_1");
+		}	
+
+
 	/*
-	ch=1;
+	ch=2;
 	th=20;
-	minParticleSize=100;
+	minParticleSize=20;
 	r=0.502;
 	prominence=5;
-	circularity=0.8;
+	circularity=0.1;
 	*/
 	
 	//Initialize conditions
 	roiManager("Reset");
 	run("Clear Results");
-	run("Colors...", "foreground=black background=white selection=yellow");
+	run("Colors...", "foreground=white background=black selection=yellow");
 	run("Set Measurements...", "area redirect=None decimal=2");
 	run("Set Scale...", "distance=1 known="+r+" unit=micron");
 
@@ -139,7 +229,7 @@ macro "CellCountAuto Action Tool - C0f0T4d14C"{
 	aa = split(MyTitle,".");
 	MyTitle_short = aa[0];
 	showStatus("Analyzing"+MyTitle);
-
+	print(MyTitle);
 	
 	// IMAGE CHANNELS ADJUSTMENT
 	run("Duplicate...", "title=orig duplicate");
@@ -151,39 +241,16 @@ macro "CellCountAuto Action Tool - C0f0T4d14C"{
 	run("Z Project...", "projection=[Max Intensity]");
 	selectWindow("MAX_C"+ch+"-orig");
 	rename("MaxZProjection");
-	close("C*");
 	
-	/// AUTOMATIC SEGMENTATION BASED ON SELECTED CHANNEL
+	segmentNucleus("MaxZProjection",prominence);
 	
-	selectWindow("MaxZProjection");		
-	run("Select All");
-	run("Subtract Background...", "rolling=100");
-	run("Threshold...");
-	setAutoThreshold("Default dark no-reset");
-	//Let the user choose the threshold
-	waitForUser("Select Threshold for Nucleus Segmentation");
-	getThreshold(lower, upper);
-	setThreshold(lower, upper);
-	setOption("BlackBackground", false);
-	run("Convert to Mask");
-	run("Median...", "radius=2");
-	run("Fill Holes");
-	run("Median...", "radius=2");
-	// EDM + Watershed
-	run("Duplicate...", "title=SegmentCells");
-	run("Distance Map");
-	rename("EDM");
-	//prominence=5;
-	run("Find Maxima...", "prominence="+prominence+" light output=[Segmented Particles]");
-	run("Invert");
-	selectWindow("MaxZProjection");
-	run("Invert");
-	imageCalculator("OR", "MaxZProjection","EDM Segmented");
-	selectWindow("MaxZProjection");
-	run("Invert");
+	selectWindow("finalNucleusMask");
+	
 	//minParticleSize=20;
+	//circularity=0;
 	//Size & Circularity Filter: Show Results 
-	run("Analyze Particles...", "size="+minParticleSize+"-Infinity pixel circularity="+circularity+"-1.00 show=Masks display exclude clear add in_situ");		
+	run("Analyze Particles...", "size="+minParticleSize+"-Infinity pixel circularity="+circularity+"-1.00 show=Masks display clear add in_situ");		
+	close("finalNucleusMask");
 	nCells=nResults;
 	//Compute Mean Std of Area Column
 	run("Summarize");
@@ -194,24 +261,25 @@ macro "CellCountAuto Action Tool - C0f0T4d14C"{
 
 	close("M*");close("E*");
 	
-
-	// Write results:
+	
+	
+	// Write results:
 	run("Clear Results");
-	if(File.exists(output+File.separator+"Total.xls"))
-	{
+	if(File.exists(output+File.separator+"QuantifiedImages.xls")){
 		//if exists add and modify
-		open(output+File.separator+"Total.xls");
+		open(output+File.separator+"QuantifiedImages.xls");
+		IJ.renameResults("Results");
 		i=nResults;
-		setResult("Label", i, MyTitle); 	
+		print(i);
+		setResult("[Label]", i, MyTitle); 	
 		setResult("# cells", i, nCells); 
 		setResult("AverageSize [micras^2]", i, averageSize);
 		setResult("stdSize [micras^2]", i, stdSize);
-		saveAs("Results", output+File.separator+"Total.xls");
+		saveAs("Results", output+File.separator+"QuantifiedImages.xls");
 		
 	}
-	else
-	{
-		setResult("Label", 0, MyTitle); 
+	else{
+		setResult("[Label]", 0, MyTitle); 
 		setResult("# cells", 0, nCells); 
 		setResult("AverageSize [micras^2]", 0, averageSize);
 		setResult("stdSize [micras^2]", 0, stdSize);
@@ -219,32 +287,80 @@ macro "CellCountAuto Action Tool - C0f0T4d14C"{
 		
 	}
 	
+		
 	selectWindow(MyTitle);
 	run("Z Project...", "projection=[Max Intensity]");
+	print(MyTitle);
 	run("Split Channels");
-	run("Merge Channels...", "c1=C1-MAX_"+MyTitle+" c3=C2-MAX_"+MyTitle);
+	//MyTitle="ARPE19 P96 TUNEL A1 1% 20X2.czi";
+	run("Merge Channels...", "c1=[C1-MAX_"+MyTitle+"] c3=[C2-MAX_"+MyTitle+"]");
 	roiManager("Set Color", "yellow");
 	roiManager("Set Line Width", 1);
-	roiManager("Show All");
+	roiManager("Show All without labels");
 	run("Flatten");
 	saveAs("Tiff", OutDir+File.separator+MyTitle_short+"_nCells.tif");
  	close("\\Others");
 	
-		
+	
 }
 	
+
+
+function segmentNucleus(image,prominence) 
+{	
+	setBatchMode(true);
+	image="MaxZProjection";
+	print("Segmenting Nucleus....");
+	selectWindow(image);
+	run("Duplicate...", "title=SegNucleus");
+	run("Subtract Background...", "rolling=150");
+	run("Threshold...");
 	
-	macro "CellCountAuto Action Tool Options" {
-		Dialog.create("Parameters");
+	setAutoThreshold("Default dark");
+	setAutoThreshold("Huang dark");
+	getThreshold(lower, upper);
+	setThreshold(lower, upper);
+	setOption("BlackBackground", true);
+	run("Convert to Mask", "method=Huang background=Dark black");
+	
+	run("Convert to Mask");
+	run("Analyze Particles...", "size=20-Infinity pixel show=Masks");
+	run("Convert to Mask");
+	close("SegNucleus");
+	selectWindow("Mask of SegNucleus");
+	rename("SegNucleus");
+	setBatchMode(true);
+	close("Threshold");
+	run("Fill Holes");
+	run("Median...", "radius=2 stack");
+	run("Watershed");
+	run("Duplicate...", "title=SegNucleus-1");
+	run("Distance Map");
+	
+	// transform selection to individual points
+	//prominence=1;
+	run("Find Maxima...", "prominence="+prominence+" output=[Single Points]");
+	//print(prominence);
+	rename("nucleusMaxima");
+	
+	selectWindow("SegNucleus");
+	run("Duplicate...", "title=edgesNucleus");
+	run("Find Edges");
+	
+	// MARKER-CONTROLLED WATERSHED
+	run("Marker-controlled Watershed", "input=edgesNucleus marker=nucleusMaxima mask=SegNucleus binary calculate use");
+	selectWindow("edgesNucleus-watershed");
+	run("8-bit");
+	setThreshold(1, 255);
+	setOption("BlackBackground", false);
+	run("Convert to Mask");
+	roiManager("Show None");
+	selectWindow("edgesNucleus-watershed");
+	rename("finalNucleusMask");
+	close("SegNucleus*");
+	close("nucleusMaxima");
+	close("edgesNucleus");
+	setBatchMode(false);
 		
-		Dialog.addMessage("Choose parameters");
-		Dialog.addNumber("Objective Scale", r);
-		Dialog.addNumber("Channel to Quantify", ch);
-	    Dialog.addNumber("Min particle size (px)", minParticleSize);
-	    Dialog.addNumber("Circularity Filter)", circularity);	
-		Dialog.show();
-		r= Dialog.getNumber();
-		ch= Dialog.getNumber();
-		minParticleSize= Dialog.getNumber(); 
-		circularity= Dialog.getNumber(); 			
-	}
+}
+

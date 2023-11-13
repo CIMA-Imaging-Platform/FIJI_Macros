@@ -172,225 +172,225 @@ else {
 		//open(InDir+name);
 		run("Bio-Formats", "open=["+InDir+name+"] autoscale color_mode=Composite view=Hyperstack stack_order=XYCZT");
 		}
-}
+	}
 
-Stack.setDisplayMode("composite");
-//Stack.setActiveChannels("101");
-
-run("Colors...", "foreground=black background=white selection=yellow");
-Stack.getDimensions(width, height, channels, slices, frames);
-
-roiManager("Reset");
-run("Clear Results");
-MyTitle=getTitle();
-output=getInfo("image.directory");
-
-OutDir = output+File.separator+"AnalyzedImages";
-File.makeDirectory(OutDir);
-
-aa = split(MyTitle,".");
-MyTitle_short = aa[0];
-
-getVoxelSize(vx, vy, vz, unit);
-
-// Create a merged projection:
-run("Z Project...", "projection=[Max Intensity]");
-rename("proj");
-run("RGB Color");
-rename("mergeProj");
-selectWindow("proj");
-close();
-
-
-//--SEGMENT NUCLEI--
-
-selectWindow(MyTitle);
-//run("Duplicate...", "title=nucleiMask duplicate channels=3 slices=1-"+slices);
-run("Duplicate...", "title=nucleiMask duplicate channels="+cDAPI+" slices=1-"+slices);
-
-//--Segment first in the summed projection to create a mask of individual cells:
-
-run("Z Project...", "projection=[Sum Slices]");
-rename("nucleiProjection");
-run("8-bit");
-run("Duplicate...", "title=temp");
-run("Mean...", "radius=16");
-	//tolerance=60;
-run("Find Maxima...", "prominence="+tolerance+" output=[Single Points]");
-//run("Find Maxima...", "noise="+tolerance+" output=[Single Points]");
-//run("Find Maxima...", "noise=60 output=[Single Points]");
-rename("dapiMaxima");
-selectWindow("temp");
-close();
-
-selectWindow("nucleiProjection");
-setAutoThreshold("Huang dark");
-setOption("BlackBackground", false);
-run("Convert to Mask");
-//run("Median...", "radius=1");
-run("Fill Holes");
-run("Select All");
-run("Analyze Particles...", "size=40-Infinity pixel show=Masks in_situ");
-
-run("Create Selection");
-selectWindow("dapiMaxima");
-run("Select None");
-run("Restore Selection");
-setBackgroundColor(255, 255, 255);
-run("Clear Outside");
-run("Select None");
-
-selectWindow("nucleiProjection");
-run("Select All");
-run("Duplicate...", "title=nucleiEdges");
-run("Find Edges");
-
-//--MARKER-CONTROLLED WATERSHED
-run("Marker-controlled Watershed", "input=nucleiEdges marker=dapiMaxima mask=nucleiProjection binary calculate use");
-selectWindow("nucleiEdges-watershed");
-run("8-bit");
-setThreshold(1, 255);
-setOption("BlackBackground", false);
-run("Convert to Mask");
-roiManager("Reset");
-run("Analyze Particles...", "size=0-Infinity show=Masks add in_situ");
-roiManager("Show None");
-
-selectWindow("nucleiEdges");
-close();
-selectWindow("nucleiProjection");
-close();
-selectWindow("dapiMaxima");
-close();
-selectWindow("nucleiEdges-watershed");
-rename("nucleiProjection");
-close();
-
-
-//--Segment nuclei now in each slice
-
-selectWindow("nucleiMask");
-setSlice(round(slices/2));
-run("Mean...", "radius=3 stack");
-setAutoThreshold("Huang dark");
-//setThreshold(9, 255);
-run("Convert to Mask", "method=Huang background=Dark");
-run("Fill Holes", "stack");
-
-
-//--SEGMENT RED DOTS--
-
-selectWindow(MyTitle);
-//run("Duplicate...", "title=redDots duplicate channels=1 slices=1-"+slices);
-run("Duplicate...", "title=redDots duplicate channels="+cRed+" slices=1-"+slices);
-run("8-bit");
-//--Mask red channel with the nuclei mask
-for (i = 1; i <= slices; i++) {
-	selectWindow("nucleiMask");
-	setSlice(i);
+	Stack.setDisplayMode("composite");
+	//Stack.setActiveChannels("101");
+	
+	run("Colors...", "foreground=black background=white selection=yellow");
+	Stack.getDimensions(width, height, channels, slices, frames);
+	
+	roiManager("Reset");
+	run("Clear Results");
+	MyTitle=getTitle();
+	output=getInfo("image.directory");
+	
+	OutDir = output+File.separator+"AnalyzedImages";
+	File.makeDirectory(OutDir);
+	
+	aa = split(MyTitle,".");
+	MyTitle_short = aa[0];
+	
+	getVoxelSize(vx, vy, vz, unit);
+	
+	// Create a merged projection:
+	run("Z Project...", "projection=[Max Intensity]");
+	rename("proj");
+	run("RGB Color");
+	rename("mergeProj");
+	selectWindow("proj");
+	close();
+	
+	
+	//--SEGMENT NUCLEI--
+	
+	selectWindow(MyTitle);
+	//run("Duplicate...", "title=nucleiMask duplicate channels=3 slices=1-"+slices);
+	run("Duplicate...", "title=nucleiMask duplicate channels="+cDAPI+" slices=1-"+slices);
+	
+	//--Segment first in the summed projection to create a mask of individual cells:
+	
+	run("Z Project...", "projection=[Sum Slices]");
+	rename("nucleiProjection");
+	run("8-bit");
+	run("Duplicate...", "title=temp");
+	run("Mean...", "radius=16");
+		//tolerance=60;
+	run("Find Maxima...", "prominence="+tolerance+" output=[Single Points]");
+	//run("Find Maxima...", "noise="+tolerance+" output=[Single Points]");
+	//run("Find Maxima...", "noise=60 output=[Single Points]");
+	rename("dapiMaxima");
+	selectWindow("temp");
+	close();
+	
+	selectWindow("nucleiProjection");
+	setAutoThreshold("Huang dark");
+	setOption("BlackBackground", false);
+	run("Convert to Mask");
+	//run("Median...", "radius=1");
+	run("Fill Holes");
+	run("Select All");
+	run("Analyze Particles...", "size=40-Infinity pixel show=Masks in_situ");
+	
 	run("Create Selection");
-	type=selectionType();
-	if(type!=-1) {
-		selectWindow("redDots");
+	selectWindow("dapiMaxima");
+	run("Select None");
+	run("Restore Selection");
+	setBackgroundColor(255, 255, 255);
+	run("Clear Outside");
+	run("Select None");
+	
+	selectWindow("nucleiProjection");
+	run("Select All");
+	run("Duplicate...", "title=nucleiEdges");
+	run("Find Edges");
+	
+	//--MARKER-CONTROLLED WATERSHED
+	run("Marker-controlled Watershed", "input=nucleiEdges marker=dapiMaxima mask=nucleiProjection binary calculate use");
+	selectWindow("nucleiEdges-watershed");
+	run("8-bit");
+	setThreshold(1, 255);
+	setOption("BlackBackground", false);
+	run("Convert to Mask");
+	roiManager("Reset");
+	run("Analyze Particles...", "size=0-Infinity show=Masks add in_situ");
+	roiManager("Show None");
+	
+	selectWindow("nucleiEdges");
+	close();
+	selectWindow("nucleiProjection");
+	close();
+	selectWindow("dapiMaxima");
+	close();
+	selectWindow("nucleiEdges-watershed");
+	rename("nucleiProjection");
+	close();
+	
+	
+	//--Segment nuclei now in each slice
+	
+	selectWindow("nucleiMask");
+	setSlice(round(slices/2));
+	run("Mean...", "radius=3 stack");
+	setAutoThreshold("Huang dark");
+	//setThreshold(9, 255);
+	run("Convert to Mask", "method=Huang background=Dark");
+	run("Fill Holes", "stack");
+	
+	
+	//--SEGMENT RED DOTS--
+	
+	selectWindow(MyTitle);
+	//run("Duplicate...", "title=redDots duplicate channels=1 slices=1-"+slices);
+	run("Duplicate...", "title=redDots duplicate channels="+cRed+" slices=1-"+slices);
+	run("8-bit");
+	//--Mask red channel with the nuclei mask
+	for (i = 1; i <= slices; i++) {
+		selectWindow("nucleiMask");
 		setSlice(i);
-		run("Restore Selection");
-		setBackgroundColor(0, 0, 0);
-		run("Clear Outside", "slice");
+		run("Create Selection");
+		type=selectionType();
+		if(type!=-1) {
+			selectWindow("redDots");
+			setSlice(i);
+			run("Restore Selection");
+			setBackgroundColor(0, 0, 0);
+			run("Clear Outside", "slice");
+		}
+		else {
+			selectWindow("redDots");
+			setSlice(i);
+			run("Select All");
+			setBackgroundColor(0, 0, 0);
+			run("Clear", "slice");
+		}
 	}
-	else {
-		selectWindow("redDots");
-		setSlice(i);
-		run("Select All");
-		setBackgroundColor(0, 0, 0);
-		run("Clear", "slice");
+	
+	
+	
+	//--Use 3D object counter to segment red dots
+	run("Clear Results");
+	run("3D OC Options", "volume nb_of_obj._voxels integrated_density mean_gray_value centroid dots_size=1 font_size=10 redirect_to=none");
+	run("3D Objects Counter", "threshold="+thRedDots+" slice=1 min.="+minSizeRedDots+" max.=7077888 centroids statistics");
+	//run("3D Objects Counter", "threshold=80 slice=1 min.=10 max.=7077888 centroids statistics");
+	
+	//--Process map of detected centroids
+	selectWindow("Centroids map of redDots");
+	rename("Centroids");
+	setThreshold(1, 255);
+	setOption("BlackBackground", false);
+	run("Convert to Mask", "method=Default background=Dark");
+	run("Invert LUT");
+	run("Divide...", "value=255 stack");	// each centroid is a '1'
+	run("Z Project...", "projection=[Sum Slices]");	// sum-projection to add centroids if some of them are on the same x-y
+	rename("CentroidSum");
+	roiManager("Show None");
+	roiManager("Deselect");
+	roiManager("Combine");
+	run("Clear Outside");	// clear possible centroids that lie outside the nuclei projection mask
+	run("Select None");
+	
+	
+	//--MEASURE
+	run("Clear Results");
+	run("Set Measurements...", "area mean integrated redirect=None decimal=0");
+	roiManager("Deselect");
+	roiManager("Measure");
+	nCells = nResults;
+	nRedDots = newArray(nCells);
+	for (i = 0; i < nCells; i++) {
+		nRedDots[i] = getResult("RawIntDen", i);
 	}
-}
-
-
-
-//--Use 3D object counter to segment red dots
-run("Clear Results");
-run("3D OC Options", "volume nb_of_obj._voxels integrated_density mean_gray_value centroid dots_size=1 font_size=10 redirect_to=none");
-run("3D Objects Counter", "threshold="+thRedDots+" slice=1 min.="+minSizeRedDots+" max.=7077888 centroids statistics");
-//run("3D Objects Counter", "threshold=80 slice=1 min.=10 max.=7077888 centroids statistics");
-
-//--Process map of detected centroids
-selectWindow("Centroids map of redDots");
-rename("Centroids");
-setThreshold(1, 255);
-setOption("BlackBackground", false);
-run("Convert to Mask", "method=Default background=Dark");
-run("Invert LUT");
-run("Divide...", "value=255 stack");	// each centroid is a '1'
-run("Z Project...", "projection=[Sum Slices]");	// sum-projection to add centroids if some of them are on the same x-y
-rename("CentroidSum");
-roiManager("Show None");
-roiManager("Deselect");
-roiManager("Combine");
-run("Clear Outside");	// clear possible centroids that lie outside the nuclei projection mask
-run("Select None");
-
-
-//--MEASURE
-run("Clear Results");
-run("Set Measurements...", "area mean integrated redirect=None decimal=0");
-roiManager("Deselect");
-roiManager("Measure");
-nCells = nResults;
-nRedDots = newArray(nCells);
-for (i = 0; i < nCells; i++) {
-	nRedDots[i] = getResult("RawIntDen", i);
-}
-
-//--Write results
-run("Clear Results");
-if(File.exists(output+File.separator+"QuantifiedRedDots.xls"))
-{	
-	//if exists add and modify
-	open(output+File.separator+"QuantifiedRedDots.xls");
-	IJ.renameResults("Results");
-}
-for(j=0;j<nCells;j++){
-	i=nResults;	
-	if(j==0) { 
-		setResult("Label", i, MyTitle);
+	
+	//--Write results
+	run("Clear Results");
+	if(File.exists(output+File.separator+"QuantifiedRedDots.xls"))
+	{	
+		//if exists add and modify
+		open(output+File.separator+"QuantifiedRedDots.xls");
+		IJ.renameResults("Results");
 	}
-	setResult("# Cell", i, j+1); 
-	setResult("Number of Marker Dots", i, nRedDots[j]);					 
-}			
-saveAs("Results", output+File.separator+"QuantifiedRedDots.xls");
-
-
-//--DRAW
-selectWindow("Centroids");
-close();
-selectWindow("nucleiMask");
-close();
-selectWindow("redDots");
-close();
-
-waitForUser;
-
-selectWindow("CentroidSum");
-run("Find Maxima...", "prominence=0.01 output=[Point Selection]");
-selectWindow("mergeProj");
-run("Restore Selection");
-run("Enlarge...", "enlarge=1 pixel");
-//run("Point Tool...", "type=Circle color=Yellow size=Tiny counter=0");
-run("Flatten");
-wait(100);
-roiManager("Show All");
-roiManager("Set Color", "magenta");
-roiManager("Set Line Width", 1);
-run("Flatten");
-wait(100);
-saveAs("Jpeg", OutDir+File.separator+MyTitle_short+"_analyzed.jpg");	
-wait(100);
-rename(MyTitle_short+"_analyzed.jpg");
-
-if (InDir!="-") {
-	close(); }
-		
+	for(j=0;j<nCells;j++){
+		i=nResults;	
+		if(j==0) { 
+			setResult("Label", i, MyTitle);
+		}
+		setResult("# Cell", i, j+1); 
+		setResult("Number of Marker Dots", i, nRedDots[j]);					 
+	}			
+	saveAs("Results", output+File.separator+"QuantifiedRedDots.xls");
+	
+	
+	//--DRAW
+	selectWindow("Centroids");
+	close();
+	selectWindow("nucleiMask");
+	close();
+	selectWindow("redDots");
+	close();
+	
+	waitForUser;
+	
+	selectWindow("CentroidSum");
+	run("Find Maxima...", "prominence=0.01 output=[Point Selection]");
+	selectWindow("mergeProj");
+	run("Restore Selection");
+	run("Enlarge...", "enlarge=1 pixel");
+	//run("Point Tool...", "type=Circle color=Yellow size=Tiny counter=0");
+	run("Flatten");
+	wait(100);
+	roiManager("Show All");
+	roiManager("Set Color", "magenta");
+	roiManager("Set Line Width", 1);
+	run("Flatten");
+	wait(100);
+	saveAs("Jpeg", OutDir+File.separator+MyTitle_short+"_analyzed.jpg");	
+	wait(100);
+	rename(MyTitle_short+"_analyzed.jpg");
+	
+	if (InDir!="-") {
+		close(); }
+			
 	selectWindow("mergeProj");
 	close();
 	selectWindow("mergeProj-1");
@@ -399,8 +399,8 @@ if (InDir!="-") {
 	close();
 	selectWindow(MyTitle);
 	close();
-
+	
 }
-
-
-
+	
+	
+	

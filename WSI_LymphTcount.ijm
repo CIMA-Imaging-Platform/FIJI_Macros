@@ -2,8 +2,9 @@
 
 // Automatic tissue detection
 // Cell nuclei segmentation from blue (HE)
-// Determination of cell by applying known diameter of leucocytes (20um)
-// Brown signal (CD45) segmentation for positive cell determination
+// Determination of cell by applying known diameter of T linphocites (10um)
+// Brown signal (CD3) segmentation for positive cell determination
+
 
 
 function macroInfo(){
@@ -12,7 +13,7 @@ function macroInfo(){
 // * Target User: General
 // *  
 
-	scripttitle= "Quantification of Leucocytes CD45 Stained Area in HE+CD45 WSImages";
+	scripttitle= "Quantification of LymphT CD3 Stained Area in HE+CD3 WSImages";
 	version= "1.03";
 	date= "2020";
 	
@@ -52,7 +53,7 @@ function macroInfo(){
 	excel="Total.xls";
 	feature1="Image Label"; 
 	feature2="# Cells";
-	feature3="# Leucocytes";
+	feature3="# LymphT Cells";
 	feature4="Area of tissue (um2)"; 
 	
 	
@@ -102,7 +103,7 @@ function macroInfo(){
 	    +"<p><font size=3 i>Action tools (Buttons)</i></p>"
 	    +"<ol><font size=2  i><li>"+buttom1+"</li>"
 	    +"<li>"+buttom2+"</li></ol>"
-	    +"<p><font size=3  i>PARAMETERS:</i></p>"
+	    +"<p><font size=3  i>PARAMETERS: Right click on Action Tool</i></p>"
 	    +"<ul id=list-style-3><font size=2  i>"
 	    +"<li>"+parameter1+"</li>"
 	    +"<li>"+parameter2+"</li>"
@@ -123,13 +124,15 @@ function macroInfo(){
 	
 
 
-var r=0.502, cellDiameter=20, thTissue=230, thBlue=160, thBrown=105, minSize=10, maxSize=10000;		// Escáner 20x
 
-macro "LeucoCount Action Tool 1 - Cf00T2d15IT6d10m"{
+var r=0.502, cellDiameter=10, thTissue=230, thBlue=160, thBrown=105, minSize=10, maxSize=10000;		// Escáner 20x
+
+macro "LymphTcount Action Tool 1 - Cf00T2d15IT6d10m"{
+	
+	macroInfo();
 	
 	//just one file
 	name=File.openDialog("Select image file");
-	open(name);
 	//print(name);
 	print("Processing "+name);
 	
@@ -139,7 +142,7 @@ macro "LeucoCount Action Tool 1 - Cf00T2d15IT6d10m"{
 	Dialog.addNumber("Cell diameter (microns)", cellDiameter);		
 	Dialog.addNumber("Threshold for tissue segmentation", thTissue);
 	Dialog.addNumber("Threshold for nuclei segmentation in HE", thBlue); 
-	Dialog.addNumber("Threshold for CD45+ segmentation", thBrown);
+	Dialog.addNumber("Threshold for CD3+ segmentation", thBrown);
 	Dialog.addNumber("Min nucleus size", minSize);	
 	Dialog.addNumber("Max nucleus size", maxSize);		
 	Dialog.show();	
@@ -153,13 +156,15 @@ macro "LeucoCount Action Tool 1 - Cf00T2d15IT6d10m"{
 	maxSize= Dialog.getNumber(); 
 
 	//setBatchMode(true);
-	leuco("-","-",name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,maxSize);
+	lymphT("-","-",name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,maxSize);
 	setBatchMode(false);
-	showMessage("CD45 quantified!");
+	showMessage("CD3 quantified!");
 
 }
 
-macro "LeucoCount Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
+macro "LymphTcount Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
+	
+	macroInfo();
 	
 	InDir=getDirectory("Choose images directory");
 	list=getFileList(InDir);
@@ -171,7 +176,7 @@ macro "LeucoCount Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	Dialog.addNumber("Cell diameter (microns)", cellDiameter);		
 	Dialog.addNumber("Threshold for tissue segmentation", thTissue);
 	Dialog.addNumber("Threshold for nuclei segmentation in HE", thBlue); 
-	Dialog.addNumber("Threshold for CD45+ segmentation", thBrown);
+	Dialog.addNumber("Threshold for CD3+ segmentation", thBrown);
 	Dialog.addNumber("Min nucleus size", minSize);	
 	Dialog.addNumber("Max nucleus size", maxSize);		
 	Dialog.show();	
@@ -192,19 +197,19 @@ macro "LeucoCount Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 			name=list[j];
 			print("Processing "+name);
 			//setBatchMode(true);
-			leuco(InDir,InDir,list[j],r,cellDiameter,thTissue,thBlue,thBrown,minSize,maxSize);
+			lymphT(InDir,InDir,list[j],r,cellDiameter,thTissue,thBlue,thBrown,minSize,maxSize);
 			setBatchMode(false);
 			}
 	}
 	
-	showMessage("CD45 quantified!");
+	showMessage("CD3 quantified!");
 
 }
 
 
-function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,maxSize)
+function lymphT(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,maxSize)
 {
-
+	
 	if (InDir=="-") {open(name);}
 	else {
 		if (isOpen(InDir+name)) {}
@@ -236,7 +241,7 @@ function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,
 	run("Threshold...");
 	//setAutoThreshold("Huang");
 	//getThreshold(lower, upper);
-	//thTissue=230;
+		//th_tissue=200;
 	setThreshold(0, thTissue);
 	run("Convert to Mask");
 	run("Median...", "radius=12");
@@ -287,11 +292,11 @@ function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,
 	setAutoThreshold("Huang");
 	//waitForUser("Adjust threshold for CD3 segmentation and press OK");
 	//getThreshold(lower, upper);
-	//thBrown=150;
+		//thBrown=120;
 	setThreshold(0, thBrown);
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
-	//run("Close-");
+	run("Close-");
 	//run("Fill Holes");
 	run("Median...", "radius=1");
 	run("Analyze Particles...", "size=8-Infinity show=Masks in_situ");
@@ -315,7 +320,7 @@ function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,
 	run("Threshold...");
 	setAutoThreshold("Default");
 	setAutoThreshold("Huang");
-	//thBlue = 110;
+	   //thBlue = 140;
 	setThreshold(0, thBlue);
 	//waitForUser("Adjust threshold for cell segmentation and press OK when ready");
 	setOption("BlackBackground", false);
@@ -327,8 +332,6 @@ function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,
 	run("Clear Outside");
 	run("Select All");
 	//run("Analyze Particles...", "size=15-5000 pixel show=Masks in_situ");
-	//minSize=10;
-	//maxSize=10000;
 	run("Analyze Particles...", "size="+minSize+"-"+maxSize+" pixel show=Masks in_situ");
 	
 	// transform selection to individual points
@@ -339,7 +342,7 @@ function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,
 	selectWindow("blueMaxima");
 	run("Duplicate...", "title=cellMask");
 	run("Create Selection");
-	//cellRadiusPx = 10;
+		// cellRadiusPx = 10;
 	run("Enlarge...", "enlarge="+cellRadiusPx);
 	setForegroundColor(0, 0, 0);
 	run("Fill", "slice");
@@ -374,6 +377,7 @@ function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,
 	n=roiManager("Count");
 	nCells=n-1;
 	
+	
 	// CHECK ONE BY ONE WHICH CELLS CONTAIN CD3
 	
 	selectWindow("cellMask");
@@ -389,8 +393,6 @@ function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,
 	roiManager("Deselect");
 	roiManager("Measure");
 	selectWindow("positCellMask");	// fill in cellMask only nuclei positive por RNA
-	
-	
 	for (i=1; i<n; i++)
 	{
 		Ii=getResult("Mean",i);	
@@ -399,11 +401,10 @@ function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,
 			run("Fill", "slice");
 	  	}  	 	
 	}
-	
 	run("Select None");
 	roiManager("Reset");
 	run("Analyze Particles...", "size=0-Infinity pixel show=Masks add in_situ");
-	nLeuco=roiManager("Count");
+	nLymphT=roiManager("Count");
 	run("Select None");
 	
 	
@@ -429,7 +430,7 @@ function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,
 	i=nResults;
 	setResult("Label", i, MyTitle); 
 	setResult("# Cells", i, nCells);
-	setResult("# Leucocytes", i, nLeuco);
+	setResult("# T cells", i, nLymphT);
 	setResult("Area of tissue (um2)", i, Atm); 
 	saveAs("Results", output+File.separator+"Total.xls");
 	
@@ -455,7 +456,7 @@ function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,
 	
 	
 	// Draw CD3-positive cells
-	if(nLeuco!=0) { 
+	if(nLymphT!=0) { 
 	selectWindow("positCellMask");
 	run("Select None");
 	//run("Find Maxima...", "noise=10 output=[Point Selection] light");
@@ -490,8 +491,29 @@ function leuco(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,
 	close(); }
 	
 	//showMessage("Done!");
-	
+
 }
+
+macro "CD3count Action Tool Options" {
+	Dialog.create("Parameters");
 	
+	Dialog.addMessage("Choose parameters")	
+	Dialog.addNumber("Ratio micra/pixel", r);		
+	Dialog.addNumber("Cell diameter (microns)", cellDiameter);		
+	Dialog.addNumber("Threshold for tissue segmentation", thTissue);
+	Dialog.addNumber("Threshold for nuclei segmentation in HE", thBlue); 
+	Dialog.addNumber("Threshold for CD3+ segmentation", thBrown);
+	Dialog.addNumber("Min nucleus size", minSize);	
+	Dialog.addNumber("Max nucleus size", maxSize);		
+	Dialog.show();	
+	
+	r= Dialog.getNumber();
+	cellDiameter= Dialog.getNumber();
+	thTissue= Dialog.getNumber();
+	thBlue= Dialog.getNumber();
+	thBrown= Dialog.getNumber(); 		
+	minSize= Dialog.getNumber(); 		
+	maxSize= Dialog.getNumber(); 			
+}
 
 

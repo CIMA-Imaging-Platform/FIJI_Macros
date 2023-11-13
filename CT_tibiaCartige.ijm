@@ -1,3 +1,7 @@
+
+
+function macroInfo(){
+	
 /*
  * AUTOMATIC TIBIA CARTILAGE QUANTIFICATION"
  * Target User: F_Milagro.  
@@ -47,43 +51,124 @@
 //	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //	SOFTWARE.
+	
+	
+// " InmunoFlourescence Quantification of Rafe Structures whithin 2 Channels;
+// * Target User: General
+// *  
+/*
+	scripttitle= "AUTOMATIC TIBIA CARTILAGE QUANTIFICATION";
+	version= "1.03";
+	date= "27/06/2023";
+	
 
-scripttitle= "AUTOMATIC SEGMENTATION TIBIA CARTILAGE";
-version= "1.03";
-date= "27/06/2023";
-descriptionDetails="Target - Condyle Cartilage - 40 top slices";
-image1="../templateImages/cartilage.jpg";
-/*descriptionActionsTools="
-   
+// *  Tests Images:
 
-showMessage("ImageJ Script", "<html>"
-	+"<style>h{margin-top: 5px; margin-bottom: 5px;} p{margin: 0px;padding: 0px;} ol{margin-left: 20px;padding: 5px;} #list-style-3 {list-style-type: circle;.container {max-width: 1200px; margin: 0 auto; padding: 0px; }</style>"
-    +"<h1><font size=6 color=Teal href=https://cima.cun.es/en/research/technology-platforms/image-platforms>CIMA: Imaging Platform</h1>"
-    +"<h1><font size=5 color=Purple><i>Software Development Service</i></h1>"
-    +"<p><font size=2 color=Purple><i>ImageJ Macros</i></p>"
-    +"<h2><font size=3 color=black>"+scripttitle+"</h2>"
-    +"<p><font size=2>Created by Tomas Muñoz Santoro</p>"
-    +"<p><font size=2>Version: "+version+" ("+date+")</p>"
-    +"<p><font size=2> contact tmsantoro@unav.es</p>" 
-    +"<p><font size=2> Available for use/modification/sharing under the "+"<p4><a href=https://opensource.org/licenses/MIT/>MIT License</a></p>"
-    +"<h2><font size=3 color=black>Developed for</h2>"
-    +"<p><font size=3  i>"+descriptionDetails+"</i></p>"
-    +"<p><font size=3  i>Input Images</i></p>"
-    +"<ul id=list-style-3><font size=2  i><li>microCT : Decalcification Mouse TIBIAs. PTA contrast.</li><li>Orentation Axial</li><li>16 bit 512x512x512</li><li>boxel 20 microns</li><li>Format .tif</li></i></ul>"
-    +"<p><font size=3 i>Action tools (buttons)</i></p>"
-    +"<ol><font size=2  i><li>T : Automatic Cartilage Segmentation and Quantification of Cartilage:</li>"
-    +"<img src="+image1+" alt=CartilageSegmentation width=300 height=300>"
-    +"<li> C : Manual Selection of Lateral an Medial Condyles ROIs 0.6x1.2 mm. whithin Previously calculated ThicknessMap.</li>"  
-    +"<li> P : Plot mean Thickness Profile</li></ol>"  
-  	+"<h0><font size=5> </h0>"
-    +"");
-    
-  //+"<P4><font size=2> For more detailed instructions see "+"<p4><a href=https://www.protocols.io/edit/movie-timepoint-copytoclipboard-tool-chutt6wn>Protocols.io</a><h4> </P4>"
-setOption("DebugMode", true);
-setOption("ExpandableArrays", true);
-setOption("WaitForCompletion", true);
-Table.showRowIndexes(false);
+	imageAdquisition="microCT : 1 channel images.";
+	imageType="16bit";  
+	voxelSize="Voxel size:  20um";
+	format="Format: .tiff";   
+ 
+ //*  GUI User Requierments:
+ //*    - Choose parameters.
+ //*    - Single File and Batch Mode
+ //*    
+ // Important Parameters: click Im or Dir + right button 
+ 
+ 	  		
+	parameter1="Introduce Threshold for Green Marker (8bit): Separate G(+) and G(-)"; 
+	parameter2="Introduce Threshold for Red Marker (8bit): Separate R(+) and R(-)"; 
+			 
+//  2 Action tools:
+	
+	button1="Automatic Cartilage Segmentation and Quantification of Cartilage";
+	button2="Manual Selection of Lateral an Medial Condyles ROIs 0.6x1.2 mm. whithin previously calculated ThicknessMap. From ROIs quantify - mean, std, max and min Thickness."
+	button3="Plot mean Thickness Profile across 1,1 mm"
 
+	
+	
+//  OUTPUT
+
+	setResult("Label", i, MyTitle); 
+	setResult("Tibia axial size (mm2)", i, tibiaHeadSize);
+	setResult("Cartilage Volume (mm3)", i, cartilageVol); 
+	setResult("Cartilage MeanIntensity (Hounsfield)", i, meanIntensity);
+
+	setResult("Label", i, MyTitle); 
+	setResult("LateralCondile_meanThickness", i, meanLcondile); 
+	setResult("LateralCondile_stdThickness", i, stdLcondile);
+	setResult("LateralCondile_maxThickness", i, maxLcondile); 
+	setResult("LateralCondile_minThickness", i, minLcondile);
+	
+	setResult("MedialCondile_meanThickness", i, meanMcondile); 
+	setResult("MedialCondile_stdThickness", i, stdMcondile);  
+	setResult("MedialCondile_maxThickness", i, maxMcondile); 
+	setResult("MedialCondile_minThickness", i, minMcondile);
+	
+	saveAs("Results", output+File.separator+"TIBIAS_cartilageThickness.xls");
+
+// Analyzed Images with ROIs
+
+	
+	
+	/*  	  
+ *  version: 1.02 
+ *  Author: Mikel Ariz  
+ *  Commented by: Tomas Muñoz 2023 
+ *  Date : 2015
+ *  
+ 
+
+//	MIT License
+//	Copyright (c) 2023 Tomas Muñoz tmsantoro@unav.es
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights
+//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//	copies of the Software, and to permit persons to whom the Software is
+//	furnished to do so, subject to the following conditions:
+//	The above copyright notice and this permission notice shall be included in all
+//	copies or substantial portions of the Software.
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//	SOFTWARE.
+
+	
+	//image1="../templateImages/cartilage.jpg";
+	//descriptionActionsTools="
+	
+	showMessage("ImageJ Script", "<html>"
+		+"<style>h{margin-top: 5px; margin-bottom: 5px;} p{margin: 0px;padding: 0px;} ol{margin-left: 20px;padding: 5px;} #list-style-3 {list-style-type: circle;.container {max-width: 1200px; margin: 0 auto; padding: 0px; }</style>"
+	    +"<h1><font size=6 color=Teal href=https://cima.cun.es/en/research/technology-platforms/image-platforms>CIMA: Imaging Platform</h1>"
+	    +"<h1><font size=5 color=Purple><i>Software Development Service</i></h1>"
+	    +"<p><font size=2 color=Purple><i>ImageJ Macros</i></p>"
+	    +"<h2><font size=3 color=black>"+scripttitle+"</h2>"
+	    +"<p><font size=2>Modified by Tomas Mu&ntilde;oz Santoro</p>"
+	    +"<p><font size=2>Version: "+version+" ("+date+")</p>"
+	    +"<p><font size=2> contact tmsantoro@unav.es</p>" 
+	    +"<p><font size=2> Available for use/modification/sharing under the "+"<p4><a href=https://opensource.org/licenses/MIT/>MIT License</a></p>"
+	    +"<h2><font size=3 color=black>Developed for</h2>"
+	    +"<p><font size=3  i>Input Images</i></p>"
+	    +"<ul id=list-style-3><font size=2  i><li>"+imageAdquisition +"</li><li>"+imageType+"</li><li>"+voxelSize+"</li><li>"+format+"</li></ul>"
+	    +"<p><font size=3 i>Action tools (Buttons)</i></p>"
+	    +"<ol><font size=2  i><li>"+buttom1+"</li></ol>"
+	    +"<p><font size=3  i>PARAMETERS: Right Click on Action tool  </i></p>"
+	    +"<ul id=list-style-3><font size=2  i>"
+	    +"<li>"+parameter1+"</li>"
+	    +"<li>"+parameter2+"</li></ul>"
+	    +"<p><font size=3  i>Quantification Results: </i></p>"
+	    +"<p><font size=3 i>AnalyzedImages folder: Visualize Segmented Images</i></p>"
+	    +"<p><font size=3  i>Excel "+excel+"</i></p>"
+	    +"<ul id=list-style-3><font size=2  i><li>"+feature1+"</li><li>"+feature2+"</li><li>"+feature3+"</li><li>"+feature4+"</li>"
+	    +"<li>"+feature5+"</li><li>"+feature6+"</li><li>"+feature7+"</li><li>"+feature8+"</li>"
+	    +"<li>"+feature9+"</li><li>"+feature10+"</li><li>"+feature11+"</li><li>"+feature12+"</li><li>"+feature13+"</li></ul>"
+	    +"<h0><font size=5></h0>"
+	    +"");
+*/
 
 var maxCartilageThickness=4; //in pixels
 var voxelSize=0.02; // mm

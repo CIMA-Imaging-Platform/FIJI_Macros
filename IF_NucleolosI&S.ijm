@@ -1,4 +1,5 @@
-/* Nucleolos 
+
+/*  
  *  Modificacion Macro Nucleolos
  *  
  *  A nivel de Usuario
@@ -12,6 +13,129 @@
  *  + Area total de nucleolos.
  *  + metricas morfologícas por cada nucleolo 
  */
+
+
+function macroInfo(){
+	
+// * "Semi-Automatic Quantification of Nuclelos Intensity and Shape Descriptors in IF Confocal Zstack Images"
+// * Target User: Laura Pratz
+// *  
+
+	scripttitle= "Semi-Automatic Quantification of Nuclelos Intensity and Shape Descriptors in IF Confocal Zstack Images";
+	version= "1.03";
+	date= "2023";
+	
+// *  Tests Images:
+
+	imageAdquisition="Confocal Z Stack Images. 3 Channels: DAPI + 2 Markers Channels";
+	imageType="8bit";  
+	voxelSize="Voxel size:  unknown um xy";
+	format="Format: Zeiss .czi";   
+ 
+ //*  GUI User Requierments:
+ //*    - Choose parameters.
+ //*    - Single File and Batch Mode
+ //*    
+ // Important Parameters: click Im or Dir + right button 
+	
+	 parameter1="Introduce the position of Each Channel: AF480, DAPI, AF594"; 
+	 parameter2="Introduce which Channel Number will be used for Nucleur Segmentation (DAPI)";
+	 parameter3="Prominence: Separate joined Nuclei, The higher the value, closed nucleus will be joined together. Use 5, 10, 15";
+	 parameter4="Introduce estimated Nucleolo membrane thicknes (pixels):";
+	 
+
+ //  2 Action tools:
+	 buttom1="D: Quantify current Image.";
+	 buttom2="+: Add Selected ROI";
+	 buttom3="-: Add Selected ROI";
+
+//  OUTPUT
+
+// Analyzed Images with ROIs
+
+	excel="Quantification_IntensityResults.xls";
+	feature1="Image Label ID";
+	feature2="Nuclei ID";
+	feature5="Area Nucleo (um2)";
+	feature3="Number of Nucleolos Quantified";
+	feature4="Total Area (um2) Nucleolos";
+	feature5="Mean Intenisty Nucleoplasma for 2 channel";
+	feature6="Mean Intenisty Nucleolo for 2 channel";
+	feature7="Mean Intenisty Nucleolo Membrane for 2 channel";
+	
+	excel2="Quantification_ShapeDescriptors.xls";
+	feature8="Image Label ID";
+	feature9="Nuclei ID";
+	feature10="Area Nucleolo (um2)";
+	feature11="Circularity: value of 1.0 indicating a perfect circle. As the value approaches 0.0, it indicates an increasingly elongated shape.";
+	feature12="Aspect Ratio: The aspect ratio of the particle’s fitted ellipse, i.e., [Major Axis]/[Minor Axis].";
+	
+		
+/*  	  
+ *  version: 1.02 
+ *  Author: Tomas Muñoz
+ *  Commented by: Tomas Muñoz 2023 
+ *  Date : 2023
+ *  
+ */
+
+//	MIT License
+//	Copyright (c) 2023 Tomas Muñoz tmsantoro@unav.es
+//	Permission is hereby granted, free of charge, to any person obtaining a copy
+//	of this software and associated documentation files (the "Software"), to deal
+//	in the Software without restriction, including without limitation the rights
+//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//	copies of the Software, and to permit persons to whom the Software is
+//	furnished to do so, subject to the following conditions:
+//	The above copyright notice and this permission notice shall be included in all
+//	copies or substantial portions of the Software.
+//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//	SOFTWARE.
+
+	
+	//image1="../templateImages/cartilage.jpg";
+	//descriptionActionsTools="
+	
+	showMessage("ImageJ Script", "<html>"
+		+"<style>h{margin-top: 5px; margin-bottom: 5px;} p{margin: 0px;padding: 0px;} ol{margin-left: 20px;padding: 5px;} #list-style-3 {list-style-type: circle;.container {max-width: 1200px; margin: 0 auto; padding: 0px; }</style>"
+	    +"<h1><font size=6 color=Teal href=https://cima.cun.es/en/research/technology-platforms/image-platforms>CIMA: Imaging Platform</h1>"
+	    +"<h1><font size=5 color=Purple><i>Software Development Service</i></h1>"
+	    +"<p><font size=2 color=Purple><i>ImageJ Macros</i></p>"
+	    +"<h2><font size=3 color=black>"+scripttitle+"</h2>"
+	    +"<p><font size=2>Modified by Tomas Mu&ntilde;oz Santoro</p>"
+	    +"<p><font size=2>Version: "+version+" ("+date+")</p>"
+	    +"<p><font size=2> contact tmsantoro@unav.es</p>" 
+	    +"<p><font size=2> Available for use/modification/sharing under the "+"<p4><a href=https://opensource.org/licenses/MIT/>MIT License</a></p>"
+	    +"<h2><font size=3 color=black>Developed for</h2>"
+	    +"<p><font size=3  i>Input Images</i></p>"
+	    +"<ul id=list-style-3><font size=2  i><li>"+imageAdquisition +"</li><li>"+imageType+"</li><li>"+voxelSize+"</li><li>"+format+"</li></ul>"
+	    +"<p><font size=3 i>Action tools (Buttons)</i></p>"
+	    +"<ol><font size=2  i><li>"+buttom1+"</li>"
+	    +"<li>"+buttom2+"</li>"
+	    +"<li>"+buttom3+"</li></ol>"
+	    +"<p><font size=3  i>PARAMETERS: Right Click on Action tools  </i></p>"
+	    +"<ul id=list-style-3><font size=2  i>"
+	    +"<li>"+parameter1+"</li>"
+	    +"<li>"+parameter2+"</li>"
+	    +"<li>"+parameter3+"</li>"
+	    +"<li>"+parameter4+"</li></ul>"
+	    +"<p><font size=3  i>Quantification Results: </i></p>"
+	    +"<p><font size=3 i>AnalyzedImages folder: Visualize Segmented Images</i></p>"
+	    +"<p><font size=3  i>Excel "+excel+"</i></p>"
+	    +"<ul id=list-style-3><font size=2  i><li>"+feature1+"</li><li>"+feature2+"</li><li>"+feature3+"</li><li>"+feature4+"</li><li>"+feature5+"</li><li>"+feature6+"</li><li>"+feature7+"</li></ul>"
+	    +"<p><font size=3  i>Excel "+excel2+"</i></p>"
+	    +"<ul id=list-style-3><font size=2  i><li>"+feature8+"</li><li>"+feature9+"</li><li>"+feature10+"</li><li>"+feature11+"</li><li>"+feature12+"</li></ul>"
+	    +"<h0><font size=5></h0>"
+	    +"");
+
+	   //+"<P4><font size=2> For more detailed instructions see "+"<p4><a href=https://www.protocols.io/edit/movie-timepoint-copytoclipboard-tool-chutt6wn>Protocols.io</a><h4> </P4>"
+}
+
 
 
 var info=fileInfo(File.name);
@@ -34,9 +158,12 @@ setOption("ExpandableArrays", true);
 
 macro "Nucleolos Action Tool 1 - C0f0T4d15Dio"
 {
+	
 	if (!isOpen(ID))
-	{
+	{	
+				
 		fileInfo(File.name);
+		
 	}
 
 	roiManager("Reset");
@@ -158,6 +285,8 @@ macro "Nucleolos Action Tool 3 - C0f0T7e20-"
 
 function fileInfo(name)
 {		
+	
+		macroInfo();
 		close("Summary");
 		close("Results");
 		close("*");

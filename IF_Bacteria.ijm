@@ -317,6 +317,7 @@ Array.getStatistics(Abact, minAbact, maxAbact, meanAbact, stdAbact);
 Array.getStatistics(Ired, minIred, maxIred, meanIred, stdIred);
 Array.getStatistics(Igreen, minIgreen, maxIgreen, meanIgreen, stdIgreen);
 Array.getStatistics(Rat_g_r, minRat_g_r, maxRat_g_r, meanRat_g_r, stdRat_g_r);
+
 if(File.exists(output+File.separator+"Bacteria_results_averages.xls"))
 {	
 	//if exists add and modify

@@ -2,7 +2,7 @@
 //--------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------
 // first release date: 09/30/2015
-// latest release date: 06/07/2021
+// latest release date: 27/11/2024
 //--------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------
 
@@ -37,9 +37,9 @@ requires("1.53c");
 
 // BioVoxxel Macro Menu
 
-	var filemenu = newMenu("BioVoxxel Menu Tool", newArray("Extended Particle Analyzer", "Field-of-view measure correction", "Shape Descriptor Maps", "Binary Feature Extractor", "Speckle Inspector", "Watershed Irregular Features", "EDM Binary Operations", "-", "Threshold Check", "-", "Filter Check", "-", "Flat-field correction", "Pseudo flat-field correction", "Convoluted Background Subtraction", "-", "Gaussian weighted Median", "Difference of Gaussian", "Difference from Median", "Adaptive Filter", "Recursive Filters", "-", "Hyperstack Color Coding", "-", "SSIDC Cluster Indicator", "-", "Neighbor Analysis", "2D Particle Distribution", "Cluster Indicator", "-", "About"));
+	var filemenu = newMenu("BioVoxxel Menu Tool", newArray("Extended Particle Analyzer", "Field-of-view measure correction", "Shape Descriptor Maps", "Binary Feature Extractor", "Speckle Inspector", "Watershed Irregular Features", "EDM Binary Operations", "-", "Threshold Check", "-", "Filter Check", "-", "Flat-field correction", "Pseudo flat-field correction", "Convoluted Background Subtraction", "-", "Gaussian weighted Median", "Difference of Gaussian", "Difference from Median", "Adaptive Filter", "Recursive Filters", "-", "Color Excess", "-", "Hyperstack Color Coding", "-", "SSIDC Cluster Indicator", "-", "Neighbor Analysis", "2D Particle Distribution", "Cluster Indicator", "-", "About"));
 	
-	macro "BioVoxxel Menu Tool - C000C010C020C030C040C050Df9C050D62C050D75C060D87C060D76C060D61C060Db8C060D63C060D74Da8Dc8C060D50De9C060D81C060De7C060D91Dc2C060D77Dd4Dd8C060De8C070D71D97Dd3C070D73D78C070D51D60De6C070D06D5aD69Db2C070D4bD86Dd5C070D3dD98Da7C070D64Da2C070D3cD72D82D83D84D85D92D93D94D95D96Da1Da3Da4Da5Da6Db3Db4Db5Db6Db7Dc3Dc4Dc5Dc6Dc7Dd6Dd7C070D2dC070Dd9C070C080D2cC080D15D19Dd2C080D88C080D18C080D24DafC080D33C080D2bC080D42D65C080De5C080D52C080D4cC080D17D41D68C080C090D2aD59C090D9fDb1Dc9C090D32D4aD5bC090D1aD3bC090D16D53D66C090D25D29D5eD6eDf8C090D26D27D28D34D35D36D37D38D39D3aD43D44D45D46D47D48D49D54D55D56D57D58D67DeaC090D6aC090DbeC090D07C090D23DdbC090D70D7eDcdC090D79DccC0a0D4eDb9C0a0DbdDdcC0a0D14C0a0D8eDaeC0a0D4dD8fC0a0D05Da9C0a0DebC0b0Dc1DfaC0b0D9eC0b0D5cD5dD99DdaC0b0D6bD6cD6dD7aD7bD7cD7dD89D8aD8bD8cD8dD9aD9bD9cD9dDaaDabDacDadDbaDbbDbcDcaDcbC0b0De4C0b0D1bD3eC0b0D80C0b0C0c0Df7C0c0D08C0c0D7fC0c0C0d0D2eC0d0Dd1C0d0D6fC0d0C0e0C0f0D5fC0f0"{
+	macro "BioVoxxel Menu Tool - CdcdD40C949L5060Cb8bD70CdcdL8090CfefD31C949D41Cb0aD51C908D61Ca09D71C928L81a1Cb8bLb1c1CdcdDd1CfefD22Cc3bD32Cd0bL4252C908D62Cb0aL72a2Ca09Db2C908Dc2C949Dd2CfefDe2D13Cb8bD23Cc0bD33Cd0cD43Cd0bD53C908D63Ca09D73Cb0aL83c3C928Dd3CdcdDe3Cb8bD14Cc0bD24Cd0cL3454Cc0bD64C908D74Cb0aL84c4Ca09Dd4Cb8bDe4D05Cc3bD15Cd0cL2555Cc0bD65C908D75Cb0aL85d5C949De5C928D06Cd0cL1656Cd0bD66C908D76Ca09D86Cb0aL96d6C928De6CdcdDf6Cc3bD07Cd0bD17Cd0cL2767Cb0aD77C908L8797Ca09Da7Cb0aLb7d7C908De7Cb8bDf7CdcdD08Cc0bD18Cd0cL2858Cd0bD68Cb0aD78Cc0bL8898C908La8d8Ca09De8C949Df8CdcdD09Cc3bD19Cd0cL2949Cd0bD59Cb0aD69Cf0dD79Cf0eL89a9Cf0dLb9c9Cc0bDd9Ca09De9C928Df9C949D1aCd0bD2aCd0cD3aCd0bD4aCb0aD5aCf0dD6aCf0eL7adaCc3bDeaCb8bDfaD1bCc0bD2bCd0bD3bCb0aD4bCd0cD5bCf0eL6bcbCc3bDdbCb8bDebCdcdD1cCc3bD2cCc0bD3cCd0bD4cCf0eL5cbcCf0dDccCb8bDdcC949D2dCc0bD3dCf0dD4dCf0eL5dadCf0dDbdCc3bDcdCfefDddCdcdL2e3eCb8bD4eCc3bL5e7eCf0dD8eCf0eD9eCf0dDaeCc3bDbeCfefDceCdcdL6f7fCb8bD8fCc3bL9fafCdcdDbf"{
 
 		BVCmd = getArgument();
 		if (BVCmd!="-") {
@@ -65,6 +65,7 @@ requires("1.53c");
 			else if (BVCmd=="Difference from Median") { DifferenceOfMedian(); }
 			else if (BVCmd=="Adaptive Filter") { run("Adaptive Filter"); }
 			else if (BVCmd=="Recursive Filters") { run("Recursive Filters"); }
+			else if (BVCmd=="Color Excess") { colorExcess(); }
 			else if (BVCmd=="Hyperstack Color Coding") { HyperstackColorCoding(); }
 			else if (BVCmd=="SSIDC Cluster Indicator") {run("SSIDC Cluster Indicator");}
 			else if (BVCmd=="Neighbor Analysis") { NeighborAnalysis(); }
@@ -1824,7 +1825,7 @@ function ThresholdCheck() {
 
 
 //---------------------------------------------------------------------------------------
-// Flat-field background correction, jan Brocher/BioVoxxel 2013
+// Flat-field background correction, jan Brocher/BioVoxxel 2013, newest version 231010
 //---------------------------------------------------------------------------------------
 
 function FFBackgroundCorrection() {
@@ -1867,19 +1868,36 @@ function FFBackgroundCorrection() {
 	if (type1!=type2) { exit("images need to be of the same type"); }
 	
 	if(type1!=24) {
+		run("Conversions...", " ");
 		setPasteMode("Copy");
 		selectWindow(original);
+		run("32-bit");
+		selectWindow(flatField);
+		run("32-bit");
 		getRawStatistics(nPixels, mean, min, max, std, histogram);
 		run("Calculator Plus", "i1=["+original+"] i2=["+flatField+"] operation=[Divide: i2 = (i1/i2) x k1 + k2] k1=mean k2=0 create");
-		rename("FFCorr_"+original);
-		//setBatchMode("show");
+		resultImageName = "FFCorr_"+original;
+		imageCounter = 1;
+		while (isOpen(resultImageName)) {
+			resultImageName = "FFCorr_"+original + "-" + imageCounter;
+			imageCounter++;
+		}
+		rename(resultImageName);
+		
+		selectWindow(original);
+		run("" + type1 + "-bit");
+		selectWindow(flatField);
+		run("" + type2 + "-bit");
+		
+		selectWindow(resultImageName);
 		setBatchMode(false);
+		run("Conversions...", "scale");
 		exit();
 	} else if (type1==24) {
 		selectWindow(original);
 		run("Duplicate...", "title=[dup_"+original+"]");
 		HSBOrig=getTitle();
-		run("HSB Stack");
+		run("HSB (32-bit)");
 		setSlice(3);
 		run("Duplicate...", "title=brightnessOrig");
 		brightnessOrig = getTitle();
@@ -1888,12 +1906,12 @@ function FFBackgroundCorrection() {
 		selectWindow(flatField);
 		run("Duplicate...", "title=[dup_"+flatField+"]");
 		HSBFF=getTitle();
-		run("HSB Stack");
+		run("HSB (32-bit)");
 		setSlice(3);
 		run("Duplicate...", "title=brightnessFF");
 		brightnessFF = getTitle();
 		
-		run("Calculator Plus", "i1=["+brightnessOrig+"] i2=["+brightnessFF+"] operation=[Divide: i2 = (i1/i2) x k1 + k2] k1=mean k2=0 create");
+		run("Calculator Plus", "i1=["+brightnessOrig+"] i2=["+brightnessFF+"] operation=[Divide: i2 = (i1/i2) x k1 + k2] k1="+mean+" k2=0 create");
 		result=getTitle();
 		run("Select All");
 		run("Copy");
@@ -3730,6 +3748,37 @@ function CorrectedSkeletonLength() {
 	close(correction);
 	setBatchMode(false);
 }
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+function colorExcess() {
+	
+	colorArray = newArray("red", "green", "blue");
+	Dialog.create("Extract Color Excess");
+	Dialog.addChoice("Excess of", colorArray, "green");
+	Dialog.show();
+	color = Dialog.getChoice();
+	
+	setBatchMode(true);
+	original = getTitle();
+	run("Duplicate...", " ");
+	duplicate = getTitle();
+	remainingColors = Array.deleteValue(colorArray, color);
+	img_1 = duplicate + " ("+color+")";
+	img_2 = duplicate + " ("+remainingColors[0]+")";
+	img_3 = duplicate + " ("+remainingColors[1]+")";
+	
+	run("Split Channels");
+	imageCalculator("Add create 32-bit", img_1, img_1);
+	double_green = getTitle();
+	imageCalculator("Subtract create 32-bit", double_green, img_2);
+	green_minus_red = getTitle();
+	imageCalculator("Subtract create 32-bit", green_minus_red, img_3);
+	rename("Eo_"+color+"_" + original);
+	setBatchMode(false);
+	
+}
+
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 

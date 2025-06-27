@@ -20,15 +20,15 @@
  *    		Watershed: prominence
  *    	
  *    - Phenotyping:
- *    		Detect +/- Cells Presence Rodamine inside Nuclei	
+ *    		Detect +/- Cells Presence phTypeamine inside Nuclei	
  *    		cytoBand: radius region if marker is cytoplasm or nuclear.
  *    		Masking AND operator: cell and phenotypes. 
  *    	
  *   OUTPUT Results:
 		setResult("Label", i, MyTitle); 
 		setResult("# total cells", i, nCells); 
-		setResult("# phenotype+ cells", i, nRod);
-		setResult("# % phenotype+ cells", i, nRod/nCells);
+		setResult("# phenotype+ cells", i, nphType);
+		setResult("# % phenotype+ cells", i, nphType/nCells);
 		setResult("Iavg of phenotype+ cells", i, Ipos);
 		setResult("Iavg of phenotype- cells", i, Ineg);
 		setResult("Istd of phenotype+ cells", i, Ipos_std);
@@ -109,7 +109,7 @@ setOption("WaitForCompletion", true);
 Table.showRowIndexes(false);
 
 
-var cDAPI=1, cRod=2;  
+var cDAPI=1, cphType=2;  
 var thNucl=90, thPhen=60, minMarkerPerc=5; 
 var flagContrast=false, radSmooth=2, prominence=15, cytoBand=0;
 	
@@ -132,6 +132,8 @@ macro "QIF Action Tool 1 - Cf00T2d15IT6d10m"{
 	Dialog.create("Parameters for the analysis");
 	// Cell segmentation options:
 	Dialog.addMessage("Cell segmentation")
+	Dialog.addNumber("DAPI Channel", cDAPI);
+	Dialog.addNumber("Marker Channel", cphType);
 	Dialog.addNumber("DAPI threshold", thNucl);
 	Dialog.addNumber("Prominence for maxima detection", prominence);
 	Dialog.addNumber("Radius for smoothing", radSmooth);
@@ -146,6 +148,8 @@ macro "QIF Action Tool 1 - Cf00T2d15IT6d10m"{
 	Dialog.show();	
 	
 	//get paremeters
+	cDAPI= Dialog.getNumber();
+	cphType= Dialog.getNumber();
 	thNucl= Dialog.getNumber();
 	prominence= Dialog.getNumber();
 	radSmooth= Dialog.getNumber();
@@ -154,7 +158,7 @@ macro "QIF Action Tool 1 - Cf00T2d15IT6d10m"{
 	thPhen= Dialog.getNumber();
 	minMarkerPerc= Dialog.getNumber();
 		
-	qif("-","-",name,thNucl,prominence,radSmooth,flagContrast,phName,thPhen,minMarkerPerc);
+	qif("-","-",name,thNucl,prominence,radSmooth,flagContrast,phName,thPhen,minMarkerPerc,cDAPI,cphType);
 	showMessage("QIF done!");
 
 }
@@ -177,24 +181,32 @@ macro "QIF Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	list=getFileList(InDir);
 	L=lengthOf(list);
 	
-	Dialog.create("Parameters for the analysis");
+		Dialog.create("Parameters for the analysis");
 	// Cell segmentation options:
 	Dialog.addMessage("Cell segmentation")
+	Dialog.addNumber("DAPI Channel", cDAPI);
+	Dialog.addNumber("Marker Channel", cphType);
 	Dialog.addNumber("DAPI threshold", thNucl);
 	Dialog.addNumber("Prominence for maxima detection", prominence);
 	Dialog.addNumber("Radius for smoothing", radSmooth);
 	Dialog.addCheckbox("Adjust contrast", flagContrast);
 	
 	// Markers' segmentation options:
-	Dialog.addMessage("FOCI Marker")
-	Dialog.addNumber("Phenotype threshold", thPhen)
+	Dialog.addMessage("Phenotype Marker");
+	Dialog.addString("Phenotype Marker", "GPF");
+	Dialog.addNumber("Phenotype threshold", thPhen);
 	Dialog.addNumber("Min presence of positive marker per cell (%)", minMarkerPerc);
 	
 	Dialog.show();	
+	
+	//get paremeters
+	cDAPI= Dialog.getNumber();
+	cphType= Dialog.getNumber();
 	thNucl= Dialog.getNumber();
 	prominence= Dialog.getNumber();
 	radSmooth= Dialog.getNumber();
 	flagContrast= Dialog.getCheckbox();
+	phName=Dialog.getString();
 	thPhen= Dialog.getNumber();
 	minMarkerPerc= Dialog.getNumber();
 	
@@ -208,7 +220,7 @@ macro "QIF Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 			print("Processing "+list[j]);
 		
 			//setBatchMode(true);
-			qif(InDir,InDir,list[j],thNucl,prominence,radSmooth,flagContrast,phName,thPhen,minMarkerPerc);
+			qif(InDir,InDir,list[j],thNucl,prominence,radSmooth,flagContrast,phName,thPhen,minMarkerPerc,cDAPI,cphType);
 			
 			}
 		close("*");
@@ -223,8 +235,7 @@ macro "QIF Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 */
 
 
-function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,thPhen,minMarkerPerc)
-{
+function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,thPhen,minMarkerPerc,cDAPI,cphType){
 
 
 	if (InDir=="-") {
@@ -282,7 +293,7 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	selectWindow("orig");
     //cDAPI=1;
 	run("Duplicate...", "title=nucleiMask duplicate channels="+cDAPI);
-
+	run("8-bit");
 	
 	//flagContrast=false;
 	if(flagContrast) {
@@ -290,13 +301,14 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	}
 	
 	run("Mean...", "radius="+radSmooth);
+	
 	run("Find Maxima...", "prominence="+prominence+" output=[Single Points]");
 	rename("dapiMaxima");
 
 	selectWindow("nucleiMask");
 	setAutoThreshold("Default dark");
 	getThreshold(lower, upper);
-	thNucl=95;
+	//thNucl=95;
 	setThreshold(thNucl,upper);
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
@@ -361,18 +373,18 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	//--PHENOTYPING...
 	////////////////////
 	
-	//--Rodamine
-	nRod = findPhenotype(phName, cRod, thPhen, minMarkerPerc, "nuclear");
-	print("Number of Rod+ cells: "+nRod);
+	//--phTypeamine
+	nphType = findPhenotype(phName, cphType, thPhen, minMarkerPerc, "nuclear");
+	print("Number of phType+ cells: "+nphType);
 	
 	//--Negative cell mask:
 	imageCalculator("XOR", "cellMask",phName);
 
-	//--Measure Rod intensity of positive and negative cells:
+	//--Measure phType intensity of positive and negative cells:
 	
 	run("Set Measurements...", "area mean standard redirect=None decimal=2");
 	selectWindow("orig");
-	Stack.setChannel(cRod);
+	Stack.setChannel(cphType);
 
 	
 	// Positive cells:
@@ -383,7 +395,7 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 		run("Clear Results");
 		selectWindow("orig");
 		run("Restore Selection");
-		Stack.setChannel(cRod);
+		Stack.setChannel(cphType);
 		run("Measure");
 		Ipos = getResult("Mean", 0);
 		Ipos_std = getResult("StdDev", 0);
@@ -402,7 +414,7 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 		run("Clear Results");
 		selectWindow("orig");
 		run("Restore Selection");
-		Stack.setChannel(cRod);
+		Stack.setChannel(cphType);
 		run("Measure");
 		Ineg = getResult("Mean", 0);
 		Ineg_std = getResult("StdDev", 0);
@@ -416,28 +428,29 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	
 	//--Write results:
 	run("Clear Results");
-	if(File.exists(output+File.separator+"QuantificationResults.xls"))
+	if(File.exists(output+File.separator+"Quantification_"+phName+"CellPhenotype.xls"))
 	{	
 		//if exists add and modify
-		open(output+File.separator+"QuantificationResults.xls");
+		open(output+File.separator+"Quantification_"+phName+"CellPhenotype.xls");
 		wait(500);
 		IJ.renameResults("Results");
 		wait(500);
 	}
 	i=nResults;
 	wait(100);
-	setResult("Label", i, MyTitle); 
+	setResult("[Label]", i, MyTitle); 
 	setResult("# total cells", i, nCells); 
-	setResult("# "+phName+" cells", i, nRod);
-	setResult("# % "+phName+"+ cells", i, (nRod/nCells)*100);
+	setResult("# "+phName+" cells", i, nphType);
+	setResult("# % "+phName+"+ cells", i, (nphType/nCells)*100);
+
 	setResult("Iavg of "+phName+"+ cells", i, Ipos);
 	setResult("Iavg of "+phName+"- cells", i, Ineg);
 	setResult("Istd of "+phName+"+ cells", i, Ipos_std);
 	setResult("Istd of "+phName+"- cells", i, Ineg_std); 
-	saveAs("Results", output+File.separator+"QuantificationResults.xls");
+	saveAs("Results", output+File.separator+"Quantification_"+phName+"CellPhenotype.xls");
 		
 	
-// SAVE DETECTIONS:
+	// SAVE DETECTIONS:
 	
 	roiManager("Reset");
 	
@@ -449,7 +462,7 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	roiManager("Add");
 	close();
 	
-	// Rod
+	// phType
 	selectWindow(phName);
 	run("Create Selection");
 	type = selectionType();
@@ -471,7 +484,7 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	selectWindow("merge-1");
 	roiManager("Select", 1);
 	roiManager("Set Color", "#FF00FF");
-	roiManager("rename", "Rod+");
+	roiManager("rename", "phType+");
 	roiManager("Set Line Width", 1);
 	run("Flatten");
 	saveAs("Jpeg", OutDir+File.separator+MyTitle_short+"_analyzed.jpg");
@@ -482,7 +495,7 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	//Flatten ROIS Phenotype channel
 	selectWindow(MyTitle);
 	run("Select None");
-	run("Duplicate...", "title=Rod duplicate channels="+cRod);
+	run("Duplicate...", "title=phType duplicate channels="+cphType);
 
 	roiManager("Select", 0);
 	roiManager("Set Color", "#00FFFF");
@@ -490,10 +503,10 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	roiManager("Set Line Width", 1);
 	run("Flatten");
 	wait(200);
-	selectWindow("Rod-1");
+	selectWindow("phType-1");
 	roiManager("Select", 1);
 	roiManager("Set Color", "#FF00FF");
-	roiManager("rename", "Rod+");
+	roiManager("rename", "phType+");
 	roiManager("Set Line Width", 1);
 	run("Flatten");
 	saveAs("Jpeg", OutDir+File.separator+MyTitle_short+"_"+phName+".jpg");
@@ -502,7 +515,7 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	
 	close("orig");
 	close("m*");
-	close("Rod*");
+	close("phType*");
 	
 	//Clear unused memory
 	wait(500);
@@ -522,12 +535,11 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 function findPhenotype(phName, ch, thMarker, minMarkerPerc, markerLoc) {
 	
 	/*
-	phName="Rodamine";
+	phName="phTypeamine";
 	thMarker=350;
 	ch=2;
 	markerLoc="nuclear";
 	*/
-
 
 	
 	if(markerLoc=="nuclear") {
@@ -563,6 +575,7 @@ function findPhenotype(phName, ch, thMarker, minMarkerPerc, markerLoc) {
 	
 	//Detection 
 	selectWindow(phName+"mask");
+	run("8-bit");
 	setAutoThreshold("Default dark");
 	getThreshold(lower, upper);
 	//thMarker=350;

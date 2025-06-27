@@ -118,7 +118,6 @@ var flagContrast=false, radSmooth=2, prominence=15, cytoBand=0;
 macro "QIF Action Tool 1 - Cf00T2d15IT6d10m"{
 
 	macroInfo();
-	
 	run("Close All");
 	wait(500);
 	run("Collect Garbage");
@@ -443,6 +442,7 @@ function qif(output,InDir,name,thNucl,prominence,radSmooth,flagContrast,phName,t
 	setResult("# total cells", i, nCells); 
 	setResult("# "+phName+" cells", i, nphType);
 	setResult("# % "+phName+"+ cells", i, (nphType/nCells)*100);
+
 	setResult("Iavg of "+phName+"+ cells", i, Ipos);
 	setResult("Iavg of "+phName+"- cells", i, Ineg);
 	setResult("Istd of "+phName+"+ cells", i, Ipos_std);

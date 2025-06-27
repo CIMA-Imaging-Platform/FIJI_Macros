@@ -1,11 +1,9 @@
 
-// changelog Sept2018
-// Automatic positive cell detection when they have blue+red and NO green
 
 
 function macroInfo(){
 	
-// * Quantification of Brown WSI Images Area  
+// * Quantifiaction of Organoids on Button Device PhaseContrast Image
 // * Target User: General
 // *  
 

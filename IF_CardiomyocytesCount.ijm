@@ -75,7 +75,7 @@ function infoMacro(){
 	    +"<font size=2  i><li>-: Remove Cardiomyocyte from RioManager</li>"
 	    +"<font size=2  i><li>F: Press Finish to Quantify the Detected Cardiomyocytes</li></ul>"
 	    +"<p><font size=3  i>Steps for the User</i></p><ol><li>Select File</li><li>Press DT </li><li>Introduce Parameters</li><li>Remove unwanted Regions</li><li>Edit with + AND - Bottons</li><li>Press F to Quantify</li><li>Press DT to open next Image</li></ol>"
-	    +"<p><font size=3  i>PARAMETERS:</i></p>"
+	    +"<p><font size=3  i>PARAMETERS: Must be adjusted for each batch of images</i></p>"
 	    +"<ul id=list-style-3><font size=2  i><li>Threshold for Tissue Segmentation: Intensity Threshold to separate Background from Tissue. Higher values will detect less tissue</li><li>Threshold for Cardiomyocyte Segmentation: Intensity Threshold diferenciate tissue and Cardiomyocytes. Higher values will detect less cardiomyocytes</li>"
 	    +"<li>Separate joined Cardiomyocytes: Higher values will join Cells. Use 5,10,20</li></ul>"
 	    +"<p><font size=3  i>Quantification Results: </i></p>"
@@ -110,6 +110,17 @@ var prominence=5;
 
 macro "Aglutinina Action Tool 1 - C0f0T0d14DTcd14T"
 {	
+	
+/*
+ * This ImageJ macro, named "Aglutinina Action Tool 1", facilitates the automatic detection of tissue using Aglutinina staining. 
+ * It prompts the user to set parameters for the analysis, including thresholds for tissue and membrane segmentation, as well as 
+ * the option to separate joined cells. 
+ * After parameter input, it segments the tissue using Aglutinina staining, which involves enhancing contrast, thresholding, creating a distance map, 
+ * finding maxima, and analyzing particles. 
+ * The macro then prompts the user to edit the detection with the provided buttons and finalize the process by pressing F. 
+ * Output messages indicate the completion of the automatic detection process. 
+ */
+
 	if (!isOpen(ID)){
 		fileInfo(File.name);
 	}
@@ -153,6 +164,13 @@ macro "Aglutinina Action Tool 1 - C0f0T0d14DTcd14T"
 	
 macro "Aglutinina Action Tool 2 - C0f0T6e15+"
 {
+
+	 /**
+	 * This ImageJ macro, named "Aglutinina Action Tool 2", provides functionality to add fibers to the detection.
+	 * It prompts the user to draw a fiber to add and then fills the selected region with a mask. 
+	 * After that, it analyzes the particles within the mask and displays the selection added message.
+	 */
+
 		
 	// ADD
 	setBatchMode(false);
@@ -188,7 +206,13 @@ macro "Aglutinina Action Tool 2 - C0f0T6e15+"
 
 macro "Aglutinina Action Tool 3 - C0f0T7e20-"
 {
-
+	 
+	/**
+	 * This ImageJ macro, named "Aglutinina Action Tool 3", provides functionality to delete fibers from the detection.
+	 * It prompts the user to select a fiber to delete and then fills the selected region with a mask to delete it. 
+	 * After that, it analyzes the particles within the mask and displays the selection deleted message.
+	 */
+	 
 	// DELETE
 	setBatchMode(false);
 	run("Select None");
@@ -223,7 +247,20 @@ macro "Aglutinina Action Tool 3 - C0f0T7e20-"
 
 macro "Aglutinina Action Tool 4 - Cf00T4d14F"{
 
+	/**
+	 * This ImageJ macro, named "Aglutinina Action Tool 4", completes the process of detecting cardiomyocytes by measuring various parameters 
+	 * and saving the results.
+	 * It prompts the user to confirm before processing the final results.
+	 * It measures the area of the whole tissue and cardiomyocytes
+	 * calculates statistics such as mean, minimum, maximum, and standard deviation of cardiomyocyte sizes, and saves the results in separate files.
+	 * The results are saved in "Quantification_Cardiomyocytes.xls" and "MyTitle_short+SegmentationResults.xls" files.
+	 */
+
+
+
 	// FINISH AND SAVE RESULTS
+	
+	setBatchMode(false);
 	
 	// DETERMINE MICRONS/PIXEL RATIO:
 	run("Set Measurements...", "area redirect=None decimal=2");	
@@ -239,6 +276,7 @@ macro "Aglutinina Action Tool 4 - Cf00T4d14F"{
 	//Measure WHOLE TISSUE
 	roiManager("Show None");
 	selectWindow("tissue");
+	setBatchMode("show");
 	run("Create Selection");
 	run("Set Scale...", "distance=1 known="+r+" unit=µm");
 	run("Set Measurements...", "area redirect=None decimal=1");	
@@ -261,8 +299,7 @@ macro "Aglutinina Action Tool 4 - Cf00T4d14F"{
 	run("Flatten");
 	saveAs("Tiff", OutDir+File.separator+MyTitle_short+"cardiomyocytes.tif");	
 	
-
-	selectWindow("merge");
+	selectWindow("merge");
 	run("Set Scale...", "distance=1 known="+r+" unit=µm");
 	run("Set Measurements...", "area redirect=None decimal=1");
 	roiManager("Select",cellsID);
@@ -273,6 +310,10 @@ macro "Aglutinina Action Tool 4 - Cf00T4d14F"{
 	cellsIndex=Array.getSequence(nROIS+1);
 	cellsIndex=Array.slice(cellsIndex,1,nROIS+1);
 	cellsArea=Table.getColumn("Area","Results");
+	
+	Array.getStatistics(cellsArea, minSize, maxSize, meanSize, stdSize);
+	
+	
 
 	selectWindow(MyTitle_short+"cardiomyocytes.tif");
 	close("\\Others");
@@ -320,6 +361,11 @@ macro "Aglutinina Action Tool 4 - Cf00T4d14F"{
 	setResult("[Label]", i, MyTitle_short,"Results"); 
 	setResult("# total Cardiomyocytes", i, lengthOf(cellsIndex),"Results");
 	setResult("Area of tissue (um2)", i, tissueArea,"Results"); 
+	setResult("Cardiomyocytes MeanSize (um2)", i, meanSize,"Results"); 
+	setResult("Cardiomyocytes stdSize (um2)", i, stdSize,"Results"); 
+	setResult("Cardiomyocytes MaxSize (um2)", i, maxSize,"Results"); 
+	setResult("Cardiomyocytes MinSize (um2)", i, minSize,"Results"); 
+	
 	saveAs("Results", OutDir+File.separator+"Quantification_Cardiomyocytes.xls");
 	close("Quantification_Cardiomyocytes.xls");
 
@@ -327,60 +373,80 @@ macro "Aglutinina Action Tool 4 - Cf00T4d14F"{
 	
 }
 
+
+
 function fileInfo(name)
 {	
-
-	infoMacro();
-	close("*");
-	roiManager("Reset");
-	run("Clear Results");
+	/* Retrieves information about the selected file.
+	 * 
+	 * @param {string} name - The name of the file.
+	 * @return {array} fileDirs - An array containing the output directory, full title, and short title.
+	 *                           - Output directory where results will be saved.
+	 *                           - Full title of the selected file.
+	 *                           - Short title extracted from the full title.
+	 */
 	
+	infoMacro(); // Run predefined macro to gather information
+	close("*"); // Close all open windows
+	roiManager("Reset"); // Reset ROI manager
+	run("Clear Results"); // Clear previous results
+	
+	// Open file dialog to select file
 	open(File.openDialog("Select File"));
-	MyTitle=getTitle();
-	output=getInfo("image.directory");
-	OutDir = output+File.separator+"Results";
-	File.makeDirectory(OutDir);
-	aa = split(MyTitle,".");
-	temp = aa[0];
-	aaa = split(temp,"_");
+	MyTitle = getTitle(); // Get title of the selected file
+	output = getInfo("image.directory"); // Get directory information
+	OutDir = output + File.separator + "Results"; // Output directory for saving results
+	File.makeDirectory(OutDir); // Create output directory if it doesn't exist
+	aa = split(MyTitle,"."); 
+	temp = aa[0]; 
+	aaa = split(temp,"_"); 
 	MyTitle_short = aaa[0];
-	fileDirs=newArray(OutDir, MyTitle, MyTitle_short);
-	return  fileDirs;
+	fileDirs = newArray(OutDir, MyTitle, MyTitle_short); 
+	return fileDirs; // Return array containing directory and titles
 }
-	
-
 
 function selectRoi(MyTitle) {
 	
+	/**
+	 * Selects regions of interest (ROI) in the specified image for further analysis.
+	 * 
+	 * @param {string} MyTitle - The title of the image containing ROIs.
+	 * @returns {void}
+	 */
+	
+	// Duplicate and split channels
 	selectWindow(MyTitle);
-	setBatchMode(false);
+	setBatchMode(true);
 	run("Duplicate...", "title=orig");
 	run("Split Channels");	
 	
+	// Close unnecessary channels
 	close("orig (red)");
 	selectWindow("orig (blue)");
 	rename("dapi");
+	setBatchMode("show");
 	
-	//Aglutinina - GFP
+	// Process Aglutinina - GFP channel
 	selectWindow("orig (green)");
 	rename("Aglutinina");
 	run("8-bit");
 	run("Green");
-	run("Set Scale...", "distance=0 known=0 unit=pixel");	// remove scale
+	run("Set Scale...", "distance=0 known=0 unit=pixel");	// Remove scale
 	run("Enhance Contrast...", "saturated=0.4");
+	setBatchMode("show");
 	
-	// POSSIBILITY OF DELETING A REGION FROM THE IMAGE:
-	
+	setBatchMode(false);
+
+	// Option to delete a region from the image
 	selectWindow("Aglutinina");
-	q=getBoolean("Would you like to elliminate a region from the image?");
+	q = getBoolean("Would you like to eliminate a region from the image?");
 	while (q) {
 		setTool("freehand");
 		waitForUser("Select the region you want to delete and press OK");
-		type=selectionType();
-		if(type==-1) {
+		type = selectionType();
+		if (type == -1) {
 			showMessage("No region has been selected. Nothing will be deleted");
-		}
-		else {
+		} else {
 			run("Add to Manager");
 			selectWindow("Aglutinina");
 			roiManager("Deselect");
@@ -400,94 +466,116 @@ function selectRoi(MyTitle) {
 			run("Select None");				
 		}
 		selectWindow("Aglutinina");
-		q=getBoolean("Would you like to elliminate another region from the image?");
+		q = getBoolean("Would you like to eliminate another region from the image?");
 	}
+}
 }
 
 
 function cellSegmentation(membrane,nucleus,tissueThrhld,AglutininaThd,prominence)
 {
-	selectWindow(membrane);
-	run("Colors...", "foreground=white background=black selection=green");
+	/**
+	 * Performs cell segmentation based on membrane and nucleus images.
+	 * 
+	 * @param {string} membrane - The name of the membrane image.
+	 * @param {string} nucleus - The name of the nucleus image.
+	 * @param {number} tissueThrhld - The threshold for tissue segmentation.
+	 * @param {number} AglutininaThd - The threshold for membrane segmentation.
+	 * @param {number} prominence - The prominence for finding maxima.
+	 */
+	
+	selectWindow(membrane); 
+	run("Colors...", "foreground=white background=black selection=green"); 
 
-	//Tissue Area
-	setBatchMode(false);
-	run("Duplicate...", "title=tissue");
-	run("8-bit");
-	run("Enhance Contrast...", "saturated=0.4");
-	run("Threshold...");
-	//tissueThrhld=6;
-	setThreshold(tissueThrhld, 255);
-	setOption("BlackBackground", true);
-	run("Convert to Mask");
-	close("Threshold");
-	run("Analyze Particles...", "size=20000-Infinity show=Masks in_situ");
-	run("Median...", "radius=3");
-	run("Create Selection");
-	Roi.setStrokeColor("yellow");
-	run("Add to Manager");
-	roiManager("Show None");
-	run("Select None");
+	// Tissue Area Segmentation
+	setBatchMode(true); 
+	run("Duplicate...", "title=tissue"); 
+	run("8-bit"); 
+	run("Enhance Contrast...", "saturated=0.1"); 
+	run("Threshold..."); 
+	setThreshold(tissueThrhld, 255); 
+	setOption("BlackBackground", true); 
+	run("Convert to Mask"); 
+	close("Threshold"); 
+	run("Analyze Particles...", "size=20000-Infinity show=Masks in_situ"); 
+	run("Median...", "radius=3"); 
+	run("Create Selection"); 
+	Roi.setStrokeColor("yellow"); 
+	run("Add to Manager"); 
+	roiManager("Show None"); 
+	run("Select None"); 
 	
-	//Membrane segmentation
-	selectWindow(membrane);
-	run("Duplicate...", "title=cellMask");
-	run("8-bit");
-	run("Enhance Contrast...", "saturated=0.4");
-	run("Threshold...");
-	//AglutininaThd=25;
-	setThreshold(AglutininaThd, 255);
-	setOption("BlackBackground", true);
-	run("Convert to Mask");
-	close("Threshold");
+	// Membrane Segmentation
+	selectWindow(membrane); 
+	run("Duplicate...", "title=cellMask"); 
+	run("8-bit"); 
+	run("Enhance Contrast...", "saturated=0.1"); 
+	run("Apply LUT");
+	run("Subtract Background...", "rolling=50");
+	run("Kuwahara Filter", "sampling=1");
+	run("Threshold..."); 
+	setThreshold(AglutininaThd, 255); 
+	setOption("BlackBackground", true); 
+	run("Convert to Mask"); 
+	close("Threshold"); 
 	
-	//Cardiomyocytes count
-	run("Analyze Particles...", "size=100-Infinity show=Masks in_situ");
-	run("Invert");
-	run("Analyze Particles...", "size=100-Infinity show=Masks in_situ");
-	roiManager("Select", 0);
-	run("Enlarge...", "enlarge=-3");
-	run("Clear Outside");
-	roiManager("Select",0)
-	roiManager("Delete");
-	run("Select None");
-	run("Analyze Particles...", "size=100-Infinity show=Masks in_situ");
-	run("Duplicate...", "title=EDM");
-	run("Distance Map");
-	//prominence=3;
-	run("Find Maxima...", "prominence="+prominence+" output=[Single Points]");
-	close("EDM");
-	selectWindow(membrane);
-	run("Duplicate...", "title=cellEdges");
-	run("8-bit");
-	run("Enhance Contrast...", "saturated=0.4");
-	imageCalculator("Multiply create 32-bit", "cellEdges","cellMask");
-	run("Variance...", "radius=2");
-	close("cellEdges");
-	selectWindow("Result of cellEdges");
-	rename("cellEdges");
-	run("Marker-controlled Watershed", "input=cellEdges marker=[EDM Maxima] mask=cellMask binary calculate use");
-	close("cellMask");
-	selectWindow("cellEdges-watershed");
-	run("8-bit");
-	setThreshold(1, 255);
-	setOption("BlackBackground", false);
-	run("Convert to Mask");
-	run("Analyze Particles...", "size=100-30000 show=Masks add in_situ");
+	// Cardiomyocytes Count
+	run("Analyze Particles...", "size=100-Infinity show=Masks in_situ"); 
+	run("Invert"); 
+	run("Analyze Particles...", "size=100-Infinity show=Masks in_situ"); 
+	roiManager("Select", 0); 
+	run("Enlarge...", "enlarge=-3"); 
+	run("Clear Outside"); 
+	roiManager("Select", 0); 
+	roiManager("Delete");	
+	run("Select None"); 
+	run("Analyze Particles...", "size=100-Infinity show=Masks in_situ"); 
+	run("Duplicate...", "title=EDM"); 
+	run("Distance Map"); 
+	run("Find Maxima...", "prominence=" + prominence + " output=[Single Points]"); 
+	close("EDM"); 
+	selectWindow(membrane); 
+	run("Duplicate...", "title=cellEdges"); 
+	run("8-bit"); 
+	run("Enhance Contrast...", "saturated=0.4"); 
+	imageCalculator("Multiply create 32-bit", "cellEdges","cellMask"); 
+	run("Variance...", "radius=2"); 
+	close("cellEdges"); 
+	selectWindow("Result of cellEdges"); 
+	rename("cellEdges"); 
+	run("Marker-controlled Watershed", "input=cellEdges marker=[EDM Maxima] mask=cellMask binary calculate use"); 
+	close("cellMask"); 
+	selectWindow("cellEdges-watershed"); 
+	run("8-bit"); 
+	setThreshold(1, 255); 
+	setOption("BlackBackground", false); 
+	run("Convert to Mask"); 
+	run("Analyze Particles...", "size=100-30000 show=Masks add in_situ"); 
 	rename("cellMask");
-	close("cellE*");
-	selectWindow(membrane);
-	run("Merge Channels...", "c2="+membrane+" c3="+nucleus+" keep");
 	setBatchMode("show");
-	rename("merge");
-	roiManager("Show All with labels");
-	selectWindow("tissue");
-	run("Create Selection");
-	selectWindow("merge");
-	run("Restore Selection");
-	Roi.setStrokeColor("yellow");
+	close("cellE*"); 
+	
+	// Merge Channels
+	selectWindow("tissue"); 
+	setBatchMode("show"); 
+	selectWindow(membrane); 
+	run("Merge Channels...", "c2=" + membrane + " c3=" + nucleus + " keep"); 
+	setBatchMode("show"); 
+	rename("merge"); 
+	roiManager("Show All with labels"); 
+	selectWindow("tissue"); 
+	run("Create Selection"); 
+	selectWindow("merge"); 
+	run("Restore Selection"); 
+	Roi.setStrokeColor("yellow"); 
 	setTool("zoom");	
-	close(membrane);close(nucleus);close("E*");close("orig");
+	close(membrane); 
+	close(nucleus); 
+	close("E*"); 
+	close("orig"); 
+	setBatchMode(false); 
+
+
 	
 }
 	

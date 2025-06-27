@@ -34,7 +34,7 @@ function macroInfo(){
 
 // Analyzed Images with ROIs
 
-	excel="Total.xls";
+	excel="Results_WSI_BrownDetectionArea_Lung.xls";
 	feature1="Image Label";
 	feature2="Tissue Area (micra²)";
 	feature3="Stained area (micra²)";
@@ -299,18 +299,18 @@ if (flagBrown) {
 r1=Apm/Atm*100;
 
 run("Clear Results");
-if(File.exists(output+File.separator+"Total.xls"))
+if(File.exists(output+File.separator+"Results_WSI_BrownDetectionArea_Lung.xls"))
 {
 	//if exists add and modify
-	open(output+File.separator+"Total.xls");
+	open(output+File.separator+"Results_WSI_BrownDetectionArea_Lung.xls");
 	IJ.renameResults("Results");
 }
 i=nResults;
-setResult("Label", i, MyTitle); 
+setResult("[Label]", i, MyTitle); 
 setResult("Tissue area (micra²)",i,Atm);
 setResult("Stained area (micra²)",i,Apm);
 setResult("Ratio Astained/Atissue (%)",i,r1);			
-saveAs("Results", output+File.separator+"Total.xls");
+saveAs("Results", output+File.separator+"Results_WSI_BrownDetectionArea_Lung.xls");
 
 
 aa = split(MyTitle,".");

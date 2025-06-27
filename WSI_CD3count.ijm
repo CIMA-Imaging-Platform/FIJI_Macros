@@ -1,10 +1,3 @@
-// changelog May 2022
-
-// Automatic tissue detection
-// Cell nuclei segmentation from blue (HE)
-// Determination of cell by applying known diameter of T limphocytes (10um)
-// Brown signal (CD3) segmentation for positive cell determination
-// Measure for each cell the % of pixels positive for CD3 and set a minimum % to classify the cell as CD3+
 
 
 function macroInfo(){
@@ -15,7 +8,7 @@ function macroInfo(){
 
 	scripttitle= "Quantification of CD3(+) Cells on WSImages ";
 	version= "1.03";
-	date= "2015";
+	date= "2023";
 	
 
 // *  Tests Images:
@@ -60,7 +53,7 @@ function macroInfo(){
  *  version: 1.02 
  *  Author: Mikel Ariz  
  *  Commented by: Tomas Muñoz 2023 
- *  Date : 2015
+ *  Date : 2023
  *  
  */
 
@@ -127,6 +120,9 @@ function macroInfo(){
 var r=0.502, cellDiameter=10, thTissue=230, thBlue=140, thBrown=105, minSize=10, maxSize=10000, minBrownPerc=20;		// Escáner 20x
 
 macro "CD3count Action Tool 1 - Cf00T2d15IT6d10m"{
+
+	macroInfo();
+	
 	
 	//just one file
 	name=File.openDialog("Select image file");
@@ -163,10 +159,12 @@ macro "CD3count Action Tool 1 - Cf00T2d15IT6d10m"{
 
 macro "CD3count Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	
+	macroInfo();
+	
 	InDir=getDirectory("Choose images directory");
 	list=getFileList(InDir);
 	L=lengthOf(list);
-
+	
 	Dialog.create("Parameters for the analysis");
 	Dialog.addMessage("Choose parameters")	
 	Dialog.addNumber("Ratio micra/pixel", r);		
@@ -314,14 +312,13 @@ function cd3(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,ma
 	//close();
 	
 	
-	
 	// SEGMENT BLUE CELLS
 	selectWindow("blue");
-	run("Mean...", "radius=2");
+	run("Mean...", "radius=1");
 	run("Threshold...");
 	setAutoThreshold("Default");
 	setAutoThreshold("Huang");
-	   //thBlue = 160;
+	//thBlue = 125;
 	setThreshold(0, thBlue);
 	//waitForUser("Adjust threshold for cell segmentation and press OK when ready");
 	setOption("BlackBackground", false);
@@ -393,6 +390,24 @@ function cd3(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,ma
 	run("Select None");
 	roiManager("Deselect");
 	roiManager("Measure");
+	
+	
+	positiveRois=filterTableColum("Results", "%Area",">", minBrownPerc);
+	
+	print("Total Cells: "+nCells);
+	print("positive Cells "+lengthOf(positiveRois));
+	roiManager("select", positiveRois);
+	roiManager("save selected", OutDir+File.separator+MyTitle_short+"_roisCD3.zip");
+	roiManager("Reset");
+	roiManager("Open", OutDir+File.separator+MyTitle_short+"_roisCD3.zip");
+	selectWindow("positCellMask");
+	run("Colors...", "foreground=black background=white selection=green");
+	roiManager("Fill");
+	nCD3=roiManager("Count");
+	nCD3=nCD3-1;
+	run("Select None");
+	
+	/*
 	selectWindow("positCellMask");	// fill in cellMask only cells positive for CD3
 	for (i=1; i<n; i++)
 	{
@@ -403,11 +418,7 @@ function cd3(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,ma
 	  	}  	 	
 	}
 	run("Select None");
-	roiManager("Reset");
-	run("Analyze Particles...", "size=0-Infinity pixel show=Masks add in_situ");
-	nCD3=roiManager("Count");
-	run("Select None");
-	
+	*/
 	
 	selectWindow("Threshold");
 	run("Close");
@@ -429,7 +440,7 @@ function cd3(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,ma
 		IJ.renameResults("Results");
 	}
 	i=nResults;
-	setResult("Label", i, MyTitle); 
+	setResult("[Label]", i, MyTitle); 
 	setResult("# total cells", i, nCells);
 	setResult("# CD3+ cells", i, nCD3);
 	setResult("Area of tissue (um2)", i, Atm); 
@@ -494,6 +505,78 @@ function cd3(output,InDir,name,r,cellDiameter,thTissue,thBlue,thBrown,minSize,ma
 	//showMessage("Done!");
 
 }
+
+
+	
+function filterTableColum(tableName, columnName, filterType, threshold)
+{
+	
+	/**
+	 * Filters a table column based on a given threshold.
+	 * 
+	 * @param {string} tableName - The name of the table window.
+	 * @param {string} columnName - The name of the column to filter.
+	 * @param {string} filterType - The type of filtering ("<" for values less than, ">" for values greater than).
+	 * @param {number} threshold - The threshold value for filtering.
+	 * @return {array} positiveRois - An array containing the indices of rows that meet the filtering criteria.
+	 */
+	 
+
+	 //TEST PARAMETERS
+	 /*
+	 tableName="Results";
+	 columnName="Mean";
+	 filterType=">";
+	 threshold=0;*/
+	 
+	// Select the table window
+	selectWindow(tableName);
+	
+	// Get the number of results in the table
+	n = nResults;
+	
+	// Create an array of indices for the table rows
+	id = Array.slice(Array.getSequence(n + 1), 0, n);
+	
+	// Set the "Index" column in the table
+	Table.setColumn("Index", id);
+	
+	// Sort the table based on the specified column
+	Table.sort(columnName);
+	
+	// Get the specified column from the table
+	column = Table.getColumn(columnName);
+	
+	// Loop through the values in the column
+	for (i = 0; i < lengthOf(column); i++) {
+		// Get the value at the current position
+		value = column[i];
+		
+		// Check if the filter type is "<"
+		if (filterType == "<") {
+			// If the value is greater than the threshold, delete rows below the current position
+			if (value > threshold) {
+				selectWindow(tableName);
+				Table.deleteRows(i, lengthOf(column) - 1);
+				break;
+			}
+		} else if (filterType == ">") {
+			// If the value is greater than the threshold, delete rows above the current position
+			if (value > threshold) {
+				selectWindow(tableName);
+				Table.deleteRows(0, i - 1);
+				break;
+			}
+		}
+	}
+	
+	// Get the updated indices of rows that meet the filtering criteria
+	positiveRois = Table.getColumn("Index");
+	
+	// Return the array of positive indices
+	return positiveRois;
+}
+
 
 
 

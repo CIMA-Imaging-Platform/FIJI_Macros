@@ -13,8 +13,8 @@
  *    
  *  Important Parameters:
  * 	  - Channels cRed=1, cDAPI=3;	
- * 	  - thresholds:  tolerance=10, thRedDots=80, 
- * 	  - particlesSize: minSizeRedDots=10;		
+ * 	  - thresholds:  tolerance=10, thRedFOCIs=80, 
+ * 	  - particlesSize: minSizeRedFOCIs=10;		
  * 
  *   2 Action tools:
  *    Im: File Selection. 
@@ -47,7 +47,7 @@
 //	SOFTWARE.
 
 function info(){
-	scripttitle= "AUTOMATIC 2D/3D QUANTIFICATION OF #N NUCLEAR Marker DOT STRUCTURES / CELL   ";
+	scripttitle= "AUTOMATIC 2D/3D QUANTIFICATION OF #N NUCLEAR Marker FOCI STRUCTURES / CELL   ";
 	version= "1.02";
 	date= "2022";
 	
@@ -74,10 +74,10 @@ function info(){
 	    +"<ul id=list-style-3><font size=2  i>"
 	    +"<li>DAPI, Prot Channel order</li>"
 	    +"<li>Tolerance for Nuclei detection: Difference between two DAPI local Maxima. Higher value, close nuclei might be segmented as single one</li>"
-	    +"<li>Marker Threshold: Intensity Threshold to separate Marker Dots from Basal Signal</li>"
-	    +"<li>Size Filter for Marker Accumulation Dots</li></ul>"
+	    +"<li>Marker Threshold: Intensity Threshold to separate Marker FOCIs from Basal Signal</li>"
+	    +"<li>Size Filter for Marker Accumulation FOCIs</li></ul>"
 	    +"<p><font size=3  i>Quantification Results (Excel) </i></p>"
-	    +"<ul id=list-style-3><font size=2  i><li>#Cells</li><li>#Dots for each Cell</li></ul>"
+	    +"<ul id=list-style-3><font size=2  i><li>#Cells</li><li>#FOCIs for each Cell</li></ul>"
 	    +"<h0><font size=5></h0>"
 	    +"");
 	    
@@ -85,9 +85,9 @@ function info(){
 	}
 	
 
-var tolerance=10, thRedDots=80, minSizeRedDots=10, cRed=1, cDAPI=3;		
+var tolerance=10, thRedFOCIs=80, minSizeRedFOCIs=10, cRed=1, cDAPI=3;		
 
-macro "NuclearRedDots3D Action Tool 1 - Cf00T2d15IT6d10m"{
+macro "NuclearRedFOCIs3D Action Tool 1 - Cf00T2d15IT6d10m"{
 	
 	info();
 	
@@ -99,27 +99,27 @@ macro "NuclearRedDots3D Action Tool 1 - Cf00T2d15IT6d10m"{
 	Dialog.create("Parameters for the analysis");
 	Dialog.addMessage("Choose channel numbers");
 	Dialog.addNumber("DAPI", cDAPI);	
-	Dialog.addNumber("Marker Dots", cRed);	
+	Dialog.addNumber("Marker FOCIs", cRed);	
 	Dialog.addMessage("Choose parameters")	
 	Dialog.addNumber("Tolerance for nuclei detection", tolerance);	
-	Dialog.addNumber("Threshold for red dots detection", thRedDots);	
-	Dialog.addNumber("Min size for red dots (pixels)", minSizeRedDots);
+	Dialog.addNumber("Threshold for red FOCIs detection", thRedFOCIs);	
+	Dialog.addNumber("Min size for red FOCIs (pixels)", minSizeRedFOCIs);
 
 	Dialog.show();	
 	cDAPI= Dialog.getNumber();
 	cRed= Dialog.getNumber();
 
 	tolerance= Dialog.getNumber();
-	thRedDots= Dialog.getNumber();
-	minSizeRedDots= Dialog.getNumber();
+	thRedFOCIs= Dialog.getNumber();
+	minSizeRedFOCIs= Dialog.getNumber();
 						
-	reddots("-","-",name,tolerance,thRedDots,minSizeRedDots,cRed,cDAPI);
+	redFOCIs("-","-",name,tolerance,thRedFOCIs,minSizeRedFOCIs,cRed,cDAPI);
 	setBatchMode(false);
 	showMessage("Done!");
 
 }
 		
-macro "NuclearRedDots3D Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
+macro "NuclearRedFOCIs3D Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	
 	info();
 	
@@ -131,15 +131,15 @@ macro "NuclearRedDots3D Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	Dialog.create("Parameters for the analysis");
 	Dialog.addMessage("Choose parameters")	
 	Dialog.addNumber("Tolerance for nuclei detection", tolerance);	
-	Dialog.addNumber("Threshold for red dots detection", thRedDots);	
-	Dialog.addNumber("Min size for red dots (pixels)", minSizeRedDots);
+	Dialog.addNumber("Threshold for red FOCIs detection", thRedFOCIs);	
+	Dialog.addNumber("Min size for red FOCIs (pixels)", minSizeRedFOCIs);
 	Dialog.addMessage("Choose channel numbers");	
-	Dialog.addNumber("Red Dots", cRed);	
+	Dialog.addNumber("Red FOCIs", cRed);	
 	Dialog.addNumber("DAPI", cDAPI);	
 	Dialog.show();	
 	tolerance= Dialog.getNumber();
-	thRedDots= Dialog.getNumber();
-	minSizeRedDots= Dialog.getNumber();
+	thRedFOCIs= Dialog.getNumber();
+	minSizeRedFOCIs= Dialog.getNumber();
 	cRed= Dialog.getNumber();
 	cDAPI= Dialog.getNumber();
 
@@ -151,7 +151,7 @@ macro "NuclearRedDots3D Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 			name=list[j];
 			print(name);
 			//setBatchMode(true);
-			reddots(InDir,InDir,list[j],tolerance,thRedDots,minSizeRedDots,cRed,cDAPI);
+			redFOCIs(InDir,InDir,list[j],tolerance,thRedFOCIs,minSizeRedFOCIs,cRed,cDAPI);
 			setBatchMode(false);
 			}
 	}
@@ -159,7 +159,7 @@ macro "NuclearRedDots3D Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 }
 
 
-function reddots(output,InDir,name,tolerance,thRedDots,minSizeRedDots,cRed,cDAPI)
+function redFOCIs(output,InDir,name,tolerance,thRedFOCIs,minSizeRedFOCIs,cRed,cDAPI)
 {
 	
 if (InDir=="-") {
@@ -278,11 +278,11 @@ else {
 	run("Fill Holes", "stack");
 	
 	
-	//--SEGMENT RED DOTS--
+	//--SEGMENT RED FOCIS--
 	
 	selectWindow(MyTitle);
-	//run("Duplicate...", "title=redDots duplicate channels=1 slices=1-"+slices);
-	run("Duplicate...", "title=redDots duplicate channels="+cRed+" slices=1-"+slices);
+	//run("Duplicate...", "title=redFOCIs duplicate channels=1 slices=1-"+slices);
+	run("Duplicate...", "title=redFOCIs duplicate channels="+cRed+" slices=1-"+slices);
 	run("8-bit");
 	//--Mask red channel with the nuclei mask
 	for (i = 1; i <= slices; i++) {
@@ -291,14 +291,14 @@ else {
 		run("Create Selection");
 		type=selectionType();
 		if(type!=-1) {
-			selectWindow("redDots");
+			selectWindow("redFOCIs");
 			setSlice(i);
 			run("Restore Selection");
 			setBackgroundColor(0, 0, 0);
 			run("Clear Outside", "slice");
 		}
 		else {
-			selectWindow("redDots");
+			selectWindow("redFOCIs");
 			setSlice(i);
 			run("Select All");
 			setBackgroundColor(0, 0, 0);
@@ -308,14 +308,14 @@ else {
 	
 	
 	
-	//--Use 3D object counter to segment red dots
+	//--Use 3D object counter to segment red FOCIs
 	run("Clear Results");
-	run("3D OC Options", "volume nb_of_obj._voxels integrated_density mean_gray_value centroid dots_size=1 font_size=10 redirect_to=none");
-	run("3D Objects Counter", "threshold="+thRedDots+" slice=1 min.="+minSizeRedDots+" max.=7077888 centroids statistics");
+	run("3D OC Options", "volume nb_of_obj._voxels integrated_density mean_gray_value centroid FOCIs_size=1 font_size=10 redirect_to=none");
+	run("3D Objects Counter", "threshold="+thRedFOCIs+" slice=1 min.="+minSizeRedFOCIs+" max.=7077888 centroids statistics");
 	//run("3D Objects Counter", "threshold=80 slice=1 min.=10 max.=7077888 centroids statistics");
 	
 	//--Process map of detected centroids
-	selectWindow("Centroids map of redDots");
+	selectWindow("Centroids map of redFOCIs");
 	rename("Centroids");
 	setThreshold(1, 255);
 	setOption("BlackBackground", false);
@@ -337,17 +337,17 @@ else {
 	roiManager("Deselect");
 	roiManager("Measure");
 	nCells = nResults;
-	nRedDots = newArray(nCells);
+	nRedFOCIs = newArray(nCells);
 	for (i = 0; i < nCells; i++) {
-		nRedDots[i] = getResult("RawIntDen", i);
+		nRedFOCIs[i] = getResult("RawIntDen", i);
 	}
 	
 	//--Write results
 	run("Clear Results");
-	if(File.exists(output+File.separator+"QuantifiedRedDots.xls"))
+	if(File.exists(output+File.separator+"QuantifiedRedFOCIs.xls"))
 	{	
 		//if exists add and modify
-		open(output+File.separator+"QuantifiedRedDots.xls");
+		open(output+File.separator+"QuantifiedRedFOCIs.xls");
 		IJ.renameResults("Results");
 	}
 	for(j=0;j<nCells;j++){
@@ -356,9 +356,9 @@ else {
 			setResult("Label", i, MyTitle);
 		}
 		setResult("# Cell", i, j+1); 
-		setResult("Number of Marker Dots", i, nRedDots[j]);					 
+		setResult("Number of Marker FOCIs", i, nRedFOCIs[j]);					 
 	}			
-	saveAs("Results", output+File.separator+"QuantifiedRedDots.xls");
+	saveAs("Results", output+File.separator+"QuantifiedRedFOCIs.xls");
 	
 	
 	//--DRAW
@@ -366,7 +366,7 @@ else {
 	close();
 	selectWindow("nucleiMask");
 	close();
-	selectWindow("redDots");
+	selectWindow("redFOCIs");
 	close();
 	
 	waitForUser;

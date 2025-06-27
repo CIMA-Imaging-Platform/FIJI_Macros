@@ -1,5 +1,5 @@
 /*
- * MANUAL CARDIOMYOCITYES
+ * MANUAL CARDIOMYOCITYES count
  * manual selection of cardiomyocites, measure area and equivalent diameter
  * Target User: Leire Tapia Villanueva.
  *  
@@ -85,6 +85,10 @@ var r=0.502, thDAPI=25;	// Scanner 20X
 
 macro "manualCardio Action Tool - Cf00T4d14M"
 {
+
+	roiManager("reset");
+	run("Clear Results");
+	
 	macroInfo(); 
 	
 	var r=0.502, thDAPI=25;	// Scanner 20X
@@ -104,27 +108,50 @@ macro "manualCardio Action Tool - Cf00T4d14M"
 	MyTitle=getTitle();
 	output=getInfo("image.directory");
 	
+	OutDir = output+File.separator+"AnalyzedImages/";
+	File.makeDirectory(OutDir);
+	
 	aa = split(MyTitle,".");
 	MyTitle_short = aa[0];
 	
 	selectWindow(MyTitle);
 	setTool("zoom");
+	
 	// Manage cardiomyocite selection
 	q=getBoolean("Do you want to select a cardiomyocyte?");
-
+	
 	while(q){
+		
+		roiManager("Reset");		
 		run("Clear Results");
 		setTool("freehand");;	
 		roiManager("Show All");	// show to avoid drawing one already measured	
+		
+		// load previous rois--
+		if(File.exists(OutDir+File.separator+MyTitle_short+"_CariomyocitesROIs.zip"))
+		{	
+			//if exists add and modify
+			roiManager("Open", OutDir+File.separator+MyTitle_short+"_CariomyocitesROIs.zip");
+		}
+	
+		
 		//roiManager("Show None");
 		waitForUser("Please, draw the cardiomyocyte and press ok when ready");
 		type = selectionType();
-		  if (type==-1)	//if there is no selection, select the whole image
+	  	if (type==-1){	//if there is no selection, select the whole image
 		      waitForUser("Tienes que seleccionar un cardiomiocito antes de pulsar OK");
-		run("Add to Manager");	
+	  	}
+		roiManager("add");
+		nCardio=roiManager("count");
+		roiManager("select", nCardio-1);
 		run("Measure");
 		a=getResult("Area",0);
 		
+		roiManager("deselect");
+		
+		// WRITE ROIS--
+		roiManager("Save",  OutDir+File.separator+MyTitle_short+"_CariomyocitesROIs.zip");
+				
 		//calculate equivalent diameter
 		d=2*sqrt(a/PI);
 	
@@ -168,15 +195,18 @@ macro "manualCardio Action Tool - Cf00T4d14M"
 		close();
 		selectWindow("cm");	
 		run("Restore Selection");
-		
+		run("Select None");
 		close("cm");
-				
+		
+		
+
+						
 		// WRITE RESULTS--
 		run("Clear Results");
-		if(File.exists(output+File.separator+MyTitle_short+".xls"))
+		if(File.exists(OutDir+File.separator+MyTitle_short+".xls"))
 		{		
 			//if exists add and modify
-			open(output+File.separator+MyTitle_short+".xls");
+			open(OutDir+File.separator+MyTitle_short+".xls");
 			IJ.renameResults("Results");
 		}
 		i=nResults;
@@ -184,19 +214,20 @@ macro "manualCardio Action Tool - Cf00T4d14M"
 		setResult("Area CM (micra²)",i,a);
 		setResult("Equivalent diameter (micra)",i,d);
 		setResult("Area nucleus (micra²)",i,An);
-		saveAs("Results", output+File.separator+MyTitle_short+".xls");
+		saveAs("Results", OutDir+File.separator+MyTitle_short+".xls");
 			
 		
 		q=getBoolean("Do you want to add another cardiomyocyte?");
 		setTool("zoom");
 	}
 	
+	
 	selectWindow(MyTitle);
 	roiManager("Show All with labels");
 	roiManager("Set Color", "red");
 	roiManager("Set Line Width", 1);
 	run("Flatten");
-	saveAs("Jpeg", output+MyTitle_short+"_analyzed.jpg");
+	saveAs("Jpeg", OutDir+MyTitle_short+"_analyzed.jpg");
 	
 	selectWindow(MyTitle);
 	close();

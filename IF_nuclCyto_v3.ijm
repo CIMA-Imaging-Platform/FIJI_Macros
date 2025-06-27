@@ -12,7 +12,7 @@
  *    - Choose parameters
  *    
  *  Important Parameters:
- * 	  - thresholds:   thBlue=60,  thGreen=15
+ * 	  - thresholds:   thBlue=60,  thMarker=15
  * 	  - smoothing=10; For smoothing heterogenius DAPI signal and help maxima detection. 		
  * 	  - prominence=3 For Maxima Detection --> input to Guided Watershed
  * 	  - erodeRad=1 Not in use
@@ -28,9 +28,9 @@
 		setResult("# Monocyte", i, j+1); 
 		setResult("Area nucl (um2)", i, An[j]);
 		setResult("Area monocyte (um2)", i, Am[j]);	
-		setResult("Igreen nucl", i, In[j]); 
-		setResult("Igreen cyto", i, Ic[j]); 
-		setResult("Igreen whole cell", i, Iall[j]);		 
+		setResult("IMarker nucl", i, In[j]); 
+		setResult("IMarker cyto", i, Ic[j]); 
+		setResult("IMarker whole cell", i, Iall[j]);		 
   	  
  *  version: 1.02 
  *  Author: Mikel Ariz  
@@ -57,7 +57,7 @@
 //	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //	SOFTWARE.
 
-function info(){
+function macroInfo(){
 	scripttitle= "NUCLEUS AND CYTO InmoFluorescemce QUANTIFICATION";
 	version= "1.02";
 	date= "2022";
@@ -83,14 +83,14 @@ function info(){
 	    +"<li> DIR: Batch Mode. Select Folder: All images within the folder will be quantified .</li></ol>"
 	    +"<p><font size=3  i>Parameters</i></p>"
 	    +"<ul id=list-style-3><font size=2  i>"
-	    +"<li>DAPI and Green Threshold: Intensity Threshold: separates ROIs from background</li>"
+	    +"<li>DAPI and Marker Threshold: Intensity Threshold: separates ROIs from background</li>"
 	    +"<li>Smoothing Filter for Nuclei detection: Helps separate nuclei in case single nuclei is segmented as multiples. Ej values: 2,4 or 8</li>"
 	    +"<li>Prominence for Nuclei detection: Higher value means that close nuclei might be segmented as single one. Ej values: 5,10 or 15</li></ul>"
 	    +"<p><font size=3  i>Quantification Results: </i></p>"
 	    +"<p><font size=2  i>AnalyzedImages folder: Visualize Segmented Images</i></p>"
 	    +"<p><font size=2  i>Excel Quantification_Monocytes.xls</i></p>"
 	    +"<ul id=list-style-3><font size=2  i><li>#Monocytes</li><li>Area Nuclei (um2)<li>Area monocyte (um2)</li>"
-	    +"<li>Igreen nucli</li><li>Igreen cyto</li><li>Igreen whole cell</li></ul>"
+	    +"<li>IMarker nucli</li><li>IMarker cyto</li><li>IMarker whole cell</li></ul>"
 	    +"<h0><font size=5></h0>"
 	    +"");
 
@@ -99,14 +99,15 @@ function info(){
 	
 
 
-var thBlue=60, thGreen=15, prominence=15,  erodeRad=0, smoothing=2;
+var thBlue=60, thMarker=15, prominence=15,  erodeRad=0, smoothing=2;
 
-macro "IFnuclCyto3D Action Tool 1 - Cf00T2d15IT6d10m"{
-	
-	info();
-	
+macro "IF_NuclCyto Action Tool 1 - Cf00T2d15IT6d10m"{
+
 	run("Close All");
 	run("Collect Garbage");
+
+	macroInfo();
+
 	//just one file
 	name=File.openDialog("Select File");
 	//print(name);
@@ -114,31 +115,32 @@ macro "IFnuclCyto3D Action Tool 1 - Cf00T2d15IT6d10m"{
 	Dialog.create("Parameters");
 	Dialog.addMessage("Choose parameters")	
 	Dialog.addNumber("DAPI threshold", thBlue);
-	Dialog.addNumber("Green threshold", thGreen);	
+	Dialog.addNumber("Cytoplasm threshold", thMarker);	
 	//Dialog.addNumber("Erosion radius (px)", erodeRad);	
 	Dialog.addNumber("Prominence for cell separation", prominence);	
 	Dialog.addNumber("Smoothing for cell separation", smoothing);	
 	Dialog.show();	
 	thBlue= Dialog.getNumber();	
-	thGreen= Dialog.getNumber();	
+	thMarker= Dialog.getNumber();	
 //	erodeRad= Dialog.getNumber();	
 	prominence= Dialog.getNumber();	
 	smoothing= Dialog.getNumber();	
 	
 	//setBatchMode(true);
 	print(name);
-	ifnuclcyto3d("-","-",name,thBlue,thGreen,erodeRad,prominence,smoothing);
+	ifnuclcyto3d("-","-",name,thBlue,thMarker,erodeRad,prominence,smoothing);
 	setBatchMode(false);
 	showMessage("Done!");
 	
 }
 		
-macro "IFnuclCyto3D Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
+macro "IF_NuclCyto Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	
-	info();
-	
-	run("Close All");
+	run("Close All");	
 	run("Collect Garbage");
+
+	macroInfo();
+	
 	InDir=getDirectory("Choose a Directory");
 	list=getFileList(InDir);
 	L=lengthOf(list);
@@ -146,13 +148,13 @@ macro "IFnuclCyto3D Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	Dialog.create("Parameters");
 	Dialog.addMessage("Choose parameters")	
 	Dialog.addNumber("DAPI threshold", thBlue);
-	Dialog.addNumber("Green threshold", thGreen);	
+	Dialog.addNumber("Marker threshold", thMarker);	
 	//Dialog.addNumber("Erosion radius (px)", erodeRad);	
 	Dialog.addNumber("Prominence for cell separation", prominence);	
 	Dialog.addNumber("Smoothing for cell separation", smoothing);	
 	Dialog.show();	
 	thBlue= Dialog.getNumber();	
-	thGreen= Dialog.getNumber();	
+	thMarker= Dialog.getNumber();	
 //	erodeRad= Dialog.getNumber();	
 	prominence= Dialog.getNumber();	
 	smoothing= Dialog.getNumber();			
@@ -165,7 +167,7 @@ macro "IFnuclCyto3D Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 			name=list[j];
 			print(name);
 			//setBatchMode(true);
-			ifnuclcyto3d(InDir,InDir,list[j],thBlue,thGreen,erodeRad,prominence,smoothing);
+			ifnuclcyto3d(InDir,InDir,list[j],thBlue,thMarker,erodeRad,prominence,smoothing);
 			setBatchMode(false);
 			}
 	}
@@ -173,7 +175,7 @@ macro "IFnuclCyto3D Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 }
 
 
-function ifnuclcyto3d(output,InDir,name,thBlue,thGreen,erodeRad,prominence,smoothing)
+function ifnuclcyto3d(output,InDir,name,thBlue,thMarker,erodeRad,prominence,smoothing)
 {
 		
 	if (InDir=="-") {
@@ -192,7 +194,7 @@ function ifnuclcyto3d(output,InDir,name,thBlue,thGreen,erodeRad,prominence,smoot
 	Stack.setChannel(2);
 	run("Blue");
 	Stack.setChannel(1);
-	run("Green");
+	run("Marker");
 	
 	
 	run("Colors...", "foreground=black background=white selection=yellow");
@@ -273,8 +275,8 @@ function ifnuclcyto3d(output,InDir,name,thBlue,thGreen,erodeRad,prominence,smoot
 
 	selectWindow("cellMask");
 	setAutoThreshold("Huang dark");
-	//thGreen=15;
-	setThreshold(thGreen, 255);
+	//thMarker=15;
+	setThreshold(thMarker, 255);
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
 	run("Median...", "radius=1");
@@ -385,14 +387,14 @@ function ifnuclcyto3d(output,InDir,name,thBlue,thGreen,erodeRad,prominence,smoot
 	close();
 	
 	
-	/*// DETECT GREEN--
+	/*// DETECT Marker--
 	
-	selectWindow("green");
-	run("Duplicate...", "title=greenMask");
+	selectWindow("Marker");
+	run("Duplicate...", "title=MarkerMask");
 	run("Subtract Background...", "rolling=50");	// Largest nuclei radius ~10-12px
 	run("8-bit");
 	setAutoThreshold("Huang dark");
-	setThreshold(thGreen, 255);
+	setThreshold(thMarker, 255);
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
 	run("Median...", "radius=2");
@@ -404,7 +406,7 @@ function ifnuclcyto3d(output,InDir,name,thBlue,thGreen,erodeRad,prominence,smoot
 	nc = n-1;
 	ncFinal = nc;
 	for(i=1;i<=nc;i++){
-		selectWindow("greenMask");
+		selectWindow("MarkerMask");
 		roiManager("Deselect");
 		roiManager("Show None");
 		// Check if current cytoplasm is from a cell with nucleus
@@ -426,15 +428,15 @@ function ifnuclcyto3d(output,InDir,name,thBlue,thGreen,erodeRad,prominence,smoot
 	}
 	// Add remaining cytoplasms
 	run("Analyze Particles...", "size=10-Infinity circularity=0.00-1.00 show=Masks exclude add in_situ");
-	selectWindow("greenMask");
+	selectWindow("MarkerMask");
 	close();*/
 	
 	
-	// PROCESS GREEN ROIs
+	// PROCESS Marker ROIs
 	
 	selectWindow(MyTitle);
-	run("Duplicate...", "title=green duplicate channels=2");
-	selectWindow("green");
+	run("Duplicate...", "title=Marker duplicate channels=2");
+	selectWindow("Marker");
 	n=roiManager("count");
 	print(n);
 
@@ -491,12 +493,12 @@ function ifnuclcyto3d(output,InDir,name,thBlue,thGreen,erodeRad,prominence,smoot
 	for(j=0;j<nc;j++){
 		i=nResults;
 		setResult("[Label]", i, MyTitle_short); 
-		setResult("# Monocyte", i, j+1); 
+		setResult("# ID Cell", i, j+1); 
 		setResult("Area nucl (um2)", i, An[j]);
-		setResult("Area monocyte (um2)", i, Am[j]);	
-		setResult("Igreen nucl", i, In[j]); 
-		setResult("Igreen cyto", i, Ic[j]); 
-		setResult("Igreen whole cell", i, Iall[j]);		 
+		setResult("Area Cell (um2)", i, Am[j]);	
+		setResult("IMarker nucl", i, In[j]); 
+		setResult("IMarker cyto", i, Ic[j]); 
+		setResult("IMarker whole cell", i, Iall[j]);		 
 	}
 	
 	saveAs("Results", output+File.separator+"Quantification_Monocytes.xls");
@@ -514,7 +516,7 @@ function ifnuclcyto3d(output,InDir,name,thBlue,thGreen,erodeRad,prominence,smoot
 	
 	
 	
-	selectWindow("green");
+	selectWindow("Marker");
 	run("Select None");
 	roiManager("Show None");
 	close();

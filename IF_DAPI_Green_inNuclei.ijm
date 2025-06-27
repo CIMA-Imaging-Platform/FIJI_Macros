@@ -1,5 +1,5 @@
 // changelog January 2021
-// Segment and quantify DAPI and green areas and obtain ratio DAPI/green
+// Segment and quantify DAPI and Marker areas and obtain ratio DAPI/Marker
 
 
 function macroInfo(){
@@ -10,7 +10,7 @@ function macroInfo(){
 
 	scripttitle= "Quantifiaction of DAPI, GFP IF Intensity within Nucleus";
 	version= "1.03";
-	date= "2021";
+	date= "2023";
 	
 
 // *  Tests Images:
@@ -27,8 +27,9 @@ function macroInfo(){
  // Important Parameters: click Im or Dir + right button 
   		
 	parameter1="Introduce Channel Order"; 
-	parameter2="Introduce Channel Thresholds for Segmentation (8bit): Separate estructures, The higher threshold, the less structures are selected";
-	parameter3="Min GFP particle size (px)";
+	parameter2="Introduce Background Correction for each Channel: Introduce radius particles for each channel."
+	parameter3="Introduce Channel Thresholds for Segmentation (8bit): Separate estructures, The higher threshold, the less structures are selected";
+	parameter4="Min GFP particle size (px)";
 	 
 //  2 Action tools:
 	buttom1="Im: Single File processing";
@@ -39,13 +40,13 @@ function macroInfo(){
 // Analyzed Images with ROIs
 
 	excel="IF_quantification.xls";
-	feature1="Image Label";
+	feature1="Image [Label]";
 	feature2="DAPI area (um2)";
-	feature3="Green total area (um2)";
-	feature4="Green in nuclei area (um2)";
-	feature5="Ratio Agreen/Adapi in nuclei";
-	feature6="Avg Total Green Intensity";
-	feature7="Avg Green Intensity in nuclei";
+	feature3="Marker total area (um2)";
+	feature4="Marker in nuclei area (um2)";
+	feature5="Ratio AMarker/Adapi in nuclei";
+	feature6="Avg Total Marker Intensity";
+	feature7="Avg Marker Intensity in nuclei";
 	
 	
 	/*  	  
@@ -110,9 +111,9 @@ function macroInfo(){
 }
 
 
-var cDAPI=1, cGreen=2, thDAPI=18, thGreen=15, minGreenSize=10;
+var cDAPI=1, cMarker=2, thDAPI=18, thMarker=15, minMarkerSize=10; bckDAPI=50 ; bckMarker=200;
 
-macro "IF_DAPI_Green Action Tool 1 - Cf00T2d15IT6d10m"{
+macro "IF_DAPI_Marker Action Tool 1 - Cf00T2d15IT6d10m"{
 	
 	run("ROI Manager...");
 	
@@ -125,29 +126,35 @@ macro "IF_DAPI_Green Action Tool 1 - Cf00T2d15IT6d10m"{
 	// Channels:
 	Dialog.addMessage("Choose channel numbers")	
 	Dialog.addNumber("DAPI", cDAPI);	
-	Dialog.addNumber("Green", cGreen);	
+	Dialog.addNumber("Marker", cMarker);	
+	//Background Correction
+	Dialog.addNumber("Background Correction DAPI", bckDAPI);	
+	Dialog.addNumber("Background Correction Marker", bckMarker);
 	// Thresholds:
 	Dialog.addMessage("Choose thresholds")	
 	Dialog.addNumber("DAPI", thDAPI);	
-	Dialog.addNumber("Green", thGreen);
-	// Min size for green:
+	Dialog.addNumber("Marker", thMarker);
+	// Min size for Marker:
 	Dialog.addMessage("Choose minimum particle size")	
-	Dialog.addNumber("Min green particle size (px)", minGreenSize);
+	Dialog.addNumber("Min Marker particle size (px)", minMarkerSize);
 	Dialog.show();	
+	
 	cDAPI= Dialog.getNumber();
-	cGreen= Dialog.getNumber();
+	cMarker= Dialog.getNumber();
+	bckDAPI= Dialog.getNumber();
+	bckMarker= Dialog.getNumber();
 	thDAPI=Dialog.getNumber();
-	thGreen= Dialog.getNumber();
-	minGreenSize= Dialog.getNumber();
+	thMarker= Dialog.getNumber();
+	minMarkerSize= Dialog.getNumber();
 
 	//setBatchMode(true);
-	if_dapi_green("-","-",name,cDAPI,cGreen,thDAPI,thGreen,minGreenSize);
+	if_dapi_Marker("-","-",name,cDAPI,cMarker,thDAPI,thMarker,minMarkerSize,bckDAPI,bckMarker);
 	setBatchMode(false);
 	showMessage("Immunofluorescence quantified!");
 
 }
 
-macro "IF_DAPI_Green Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
+macro "IF_DAPI_Marker Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	
 	run("ROI Manager...");
 	
@@ -159,20 +166,25 @@ macro "IF_DAPI_Green Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	// Channels:
 	Dialog.addMessage("Choose channel numbers")	
 	Dialog.addNumber("DAPI", cDAPI);	
-	Dialog.addNumber("Green", cGreen);	
+	Dialog.addNumber("Marker", cMarker);	
+	//Background Correction
+	Dialog.addNumber("Background Correction DAPI", bckDAPI);	
+	Dialog.addNumber("Background Correction Marker", bckMarker);
 	// Thresholds:
 	Dialog.addMessage("Choose thresholds")	
 	Dialog.addNumber("DAPI", thDAPI);	
-	Dialog.addNumber("Green", thGreen);
-	// Min size for green:
+	Dialog.addNumber("Marker", thMarker);
+	// Min size for Marker:
 	Dialog.addMessage("Choose minimum particle size")	
-	Dialog.addNumber("Min green particle size (px)", minGreenSize);
+	Dialog.addNumber("Min Marker particle size (px)", minMarkerSize);
 	Dialog.show();	
 	cDAPI= Dialog.getNumber();
-	cGreen= Dialog.getNumber();
+	cMarker= Dialog.getNumber();
+	bckDAPI= Dialog.getNumber();
+	bckMarker= Dialog.getNumber();
 	thDAPI=Dialog.getNumber();
-	thGreen= Dialog.getNumber();
-	minGreenSize= Dialog.getNumber();
+	thMarker= Dialog.getNumber();
+	minMarkerSize= Dialog.getNumber();
 	
 	for (j=0; j<L; j++)
 	{
@@ -182,7 +194,7 @@ macro "IF_DAPI_Green Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 			name=list[j];
 			print("Processing "+name);
 			setBatchMode(true);
-			if_dapi_green(InDir,InDir,list[j],cDAPI,cGreen,thDAPI,thGreen,minGreenSize);
+			if_dapi_Marker(InDir,InDir,list[j],cDAPI,cMarker,thDAPI,thMarker,minMarkerSize,bckDAPI,bckMarker);
 			setBatchMode(false);
 			}
 	}
@@ -192,7 +204,7 @@ macro "IF_DAPI_Green Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 }
 
 
-function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,thGreen,minGreenSize)
+function if_dapi_Marker(output,InDir,name,cDAPI,cMarker,thDAPI,thMarker,minMarkerSize,bckDAPI,bckMarker)
 {
 
 	run("Close All");
@@ -217,10 +229,11 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,thGreen,minGreenSiz
 	
 	rename("orig");
 	Stack.setDisplayMode("composite");
+	
 	/*Stack.setChannel(1);
 	run("Grays");
 	Stack.setChannel(2);
-	run("Green");
+	run("Marker");
 	Stack.setChannel(3);
 	run("Blue");
 	Stack.setChannel(4);
@@ -232,16 +245,23 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,thGreen,minGreenSiz
 	Stack.setDisplayMode("composite");
 	Stack.setActiveChannels("1111110");
 	wait(100);*/
-	
+		
 	// BACKGROUND CORRECTION
-	
 	Stack.setChannel(cDAPI);
-	run("Subtract Background...", "rolling=70 slice");
-	Stack.setChannel(cGreen);
-	run("Subtract Background...", "rolling=30 slice");
+	selectWindow("orig");
+	run("Duplicate...", "title=DAPI duplicate channels="+cDAPI);
+	run("Subtract Background...", "rolling="+(bckDAPI+20)+" slice");
+	wait(100);
 	
+	Stack.setChannel(cMarker);
+	selectWindow("orig");
+	run("Duplicate...", "title=Marker duplicate channels="+cMarker);
+	run("Subtract Background...", "rolling="+(bckMarker+50)+" slice");
+	wait(100);
+	
+
 	// PROCESSING
-	
+	selectWindow("orig");
 	run("RGB Color");
 	rename("merge");
 	
@@ -252,8 +272,7 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,thGreen,minGreenSiz
 		
 	// SEGMENT NUCLEI FROM DAPI:
 	
-	selectWindow("orig");
-	run("Duplicate...", "title=DAPI duplicate channels="+cDAPI);
+	selectWindow("DAPI");
 	//run("Enhance Contrast", "saturated=0.35");
 	run("8-bit");
 	setAutoThreshold("Otsu dark");
@@ -263,6 +282,7 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,thGreen,minGreenSiz
 	run("Convert to Mask");
 	run("Median...", "radius=2");
 	run("Close-");
+	
 	//run("Watershed");
 	run("Fill Holes");
 	run("Analyze Particles...", "size=80-Infinity pixel show=Masks in_situ");
@@ -276,46 +296,46 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,thGreen,minGreenSiz
 	close();
 	
 	
-	// SEGMENT GREEN-POSITIVE AREA:
+	// SEGMENT Marker-POSITIVE AREA:
 	
-	flagGreen=false;
-	selectWindow("orig");
-	run("Duplicate...", "title=green duplicate channels="+cGreen);
+	flagMarker=false;
+	selectWindow("Marker");
 	//run("Enhance Contrast", "saturated=0.35");
 	run("8-bit");
 	//setThreshold(26, 255);
-	setThreshold(thGreen, 255);
+	setThreshold(thMarker, 255);
 	run("Convert to Mask");
 	//run("Median...", "radius=1");
-	run("Analyze Particles...", "size="+minGreenSize+"-Infinity pixel show=Masks in_situ");
+	
+	run("Analyze Particles...", "size="+minMarkerSize+"-Infinity pixel show=Masks in_situ");
 	run("Create Selection");
 	type=selectionType;
 	if(type==-1) {
 		makeRectangle(1,1,1,1);
-		flagGreen=true;	
+		flagMarker=true;	
 	}
-	roiManager("Add");	// ROI1 --> Green-positive pixels
+	roiManager("Add");	// ROI1 --> Marker-positive pixels
 	close();
 	
 	
-	// GREEN SIGNAL IN NUCLEI:
+	// Marker SIGNAL IN NUCLEI:
 	
-	flagGreenNuclei=false;
+	flagMarkerNuclei=false;
 	roiManager("Select", newArray(0,1));
 	roiManager("AND");
 	type=selectionType;
 	if(type==-1) {
 		makeRectangle(1,1,1,1);
-		flagGreenNuclei=true;	
+		flagMarkerNuclei=true;	
 	}
-	roiManager("Add");	// ROI2 --> Green-positive pixels in nuclei
+	roiManager("Add");	// ROI2 --> Marker-positive pixels in nuclei
 	
 	
 	// MEASUREMENTS:
 	
 	run("Set Measurements...", "area mean redirect=None decimal=5");
 	selectWindow("orig");
-	run("Duplicate...", "title=green duplicate channels="+cGreen);
+	run("Duplicate...", "title=Marker duplicate channels="+cMarker);
 	run("Clear Results");
 	roiManager("deselect");
 	roiManager("Select", 0);
@@ -326,24 +346,24 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,thGreen,minGreenSiz
 	roiManager("Measure");
 	
 	Adapi=getResult("Area", 0);
-	Agreen=getResult("Area", 1);
-	Igreen=getResult("Mean", 1);
-	if(flagGreen) {
-		Agreen=0;	
-		Igreen=0;	
+	AMarker=getResult("Area", 1);
+	IMarker=getResult("Mean", 1);
+	if(flagMarker) {
+		AMarker=0;	
+		IMarker=0;	
 	}
-	AgreenNucl=getResult("Area", 2);
-	IgreenNucl=getResult("Mean", 2);
-	if(flagGreenNuclei) {
-		AgreenNucl=0;	
-		IgreenNucl=0;	
+	AMarkerNucl=getResult("Area", 2);
+	IMarkerNucl=getResult("Mean", 2);
+	if(flagMarkerNuclei) {
+		AMarkerNucl=0;	
+		IMarkerNucl=0;	
 	}
 	
-	r1=AgreenNucl/Adapi;
+	r1=AMarkerNucl/Adapi;
 	
 	selectWindow("orig");
 	close();
-	selectWindow("green");
+	selectWindow("Marker");
 	close();
 	
 	// Write results:
@@ -355,13 +375,13 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,thGreen,minGreenSiz
 		IJ.renameResults("Results");
 	}
 	i=nResults;
-	setResult("Label", i, MyTitle); 
+	setResult("[Label]", i, MyTitle); 
 	setResult("DAPI area (um2)", i, Adapi); 
-	setResult("Green total area (um2)", i, Agreen); 
-	setResult("Green in nuclei area (um2)", i, AgreenNucl); 
-	setResult("Ratio Agreen/Adapi in nuclei", i, r1); 
-	setResult("Avg Total Green Intensity", i, Igreen); 
-	setResult("Avg Green Intensity in nuclei", i, IgreenNucl); 
+	setResult("Marker total area (um2)", i, AMarker); 
+	setResult("Marker in nuclei area (um2)", i, AMarkerNucl); 
+	setResult("Ratio AMarker/Adapi in nuclei", i, r1); 
+	setResult("Avg Total Marker Intensity", i, IMarker); 
+	setResult("Avg Marker Intensity in nuclei", i, IMarkerNucl); 
 	saveAs("Results", output+File.separator+"IF_quantification.xls");
 		
 	
@@ -382,7 +402,7 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,thGreen,minGreenSiz
 	run("Flatten");
 	roiManager("Show None");
 	roiManager("Select", 2);
-	roiManager("Set Color", "green");
+	roiManager("Set Color", "Marker");
 	roiManager("Set Line Width", 1);
 	run("Flatten");
 	saveAs("Jpeg", OutDir+File.separator+MyTitle_short+"_analyzed.jpg");

@@ -1,8 +1,3 @@
-// changelog March 2023
-// Segment and quantify green signal per nucleus
-
-// changelog January 2021
-// Segment and quantify DAPI and green areas and obtain ratio DAPI/green
 
 
 function macroInfo(){
@@ -45,14 +40,14 @@ function macroInfo(){
 	feature1="Image Label";
 	feature2="Cells ID";
 	feature3="Nuclear area (um2)";
-	feature4="Avg green signal in nucleus";
+	feature4="Avg Marker signal in nucleus";
 	
 	
 	/*  	  
  *  version: 1.02 
  *  Author: Mikel Ariz  
  *  Commented by: Tomas Muñoz 2023 
- *  Date : 2015
+ *  Date : 2023
  *  
  */
 
@@ -111,11 +106,13 @@ function macroInfo(){
 
 
 
-var cDAPI=1, cGreen=2, prominence=10, thDAPI=70, radSmooth=6;
+var cDAPI=1, cMarker=2, prominence=10, thDAPI=70, radSmooth=6;
 
-macro "IF_DAPI_Green Action Tool 1 - Cf00T2d15IT6d10m"{
+macro "IF_DAPI_Marker Action Tool 1 - Cf00T2d15IT6d10m"{
 
 	run("Close All");
+	
+	macroInfo();
 	
 	run("ROI Manager...");
 	
@@ -128,7 +125,7 @@ macro "IF_DAPI_Green Action Tool 1 - Cf00T2d15IT6d10m"{
 	// Channels:
 	Dialog.addMessage("Choose channel numbers")	
 	Dialog.addNumber("DAPI", cDAPI);	
-	Dialog.addNumber("Green", cGreen);	
+	Dialog.addNumber("Marker", cMarker);	
 	// Thresholds:
 	Dialog.addMessage("Nuclear segmentation parameters")	
 	Dialog.addNumber("DAPI threshold", thDAPI);	
@@ -137,21 +134,23 @@ macro "IF_DAPI_Green Action Tool 1 - Cf00T2d15IT6d10m"{
 	
 	Dialog.show();	
 	cDAPI= Dialog.getNumber();
-	cGreen= Dialog.getNumber();
+	cMarker= Dialog.getNumber();
 	thDAPI=Dialog.getNumber();
 	prominence= Dialog.getNumber();
 	radSmooth= Dialog.getNumber();
 	
 	//setBatchMode(true);
-	if_dapi_green("-","-",name,cDAPI,cGreen,thDAPI,prominence,radSmooth);
+	if_dapi_Marker("-","-",name,cDAPI,cMarker,thDAPI,prominence,radSmooth);
 	setBatchMode(false);
 	showMessage("Immunofluorescence quantified!");
 
 }
 
-macro "IF_DAPI_Green Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
+macro "IF_DAPI_Marker Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 
 	run("Close All");
+	
+	macroInfo()
 	
 	run("ROI Manager...");
 	
@@ -163,7 +162,7 @@ macro "IF_DAPI_Green Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	// Channels:
 	Dialog.addMessage("Choose channel numbers")	
 	Dialog.addNumber("DAPI", cDAPI);	
-	Dialog.addNumber("Green", cGreen);	
+	Dialog.addNumber("Marker", cMarker);	
 	// Thresholds:
 	Dialog.addMessage("Nuclear segmentation parameters")	
 	Dialog.addNumber("DAPI threshold", thDAPI);	
@@ -172,7 +171,7 @@ macro "IF_DAPI_Green Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	
 	Dialog.show();	
 	cDAPI= Dialog.getNumber();
-	cGreen= Dialog.getNumber();
+	cMarker= Dialog.getNumber();
 	thDAPI=Dialog.getNumber();
 	prominence= Dialog.getNumber();
 	radSmooth= Dialog.getNumber();
@@ -185,7 +184,7 @@ macro "IF_DAPI_Green Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 			name=list[j];
 			print("Processing "+name);
 			setBatchMode(true);
-			if_dapi_green(InDir,InDir,list[j],cDAPI,cGreen,thDAPI,prominence,radSmooth);
+			if_dapi_Marker(InDir,InDir,list[j],cDAPI,cMarker,thDAPI,prominence,radSmooth);
 			setBatchMode(false);
 			}
 	}
@@ -195,7 +194,7 @@ macro "IF_DAPI_Green Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 }
 
 
-function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,prominence,radSmooth)
+function if_dapi_Marker(output,InDir,name,cDAPI,cMarker,thDAPI,prominence,radSmooth)
 {
 	
 	if (InDir=="-") {
@@ -221,7 +220,7 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,prominence,radSmoot
 	/*Stack.setChannel(1);
 	run("Grays");
 	Stack.setChannel(2);
-	run("Green");
+	run("Marker");
 	Stack.setChannel(3);
 	run("Blue");
 	Stack.setChannel(4);
@@ -240,7 +239,7 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,prominence,radSmoot
 	Stack.setChannel(cDAPI);
 	run("Subtract Background...", "rolling=70 slice");
 	run("Enhance Contrast", "saturated=0.35");
-	Stack.setChannel(cGreen);
+	Stack.setChannel(cMarker);
 	run("Subtract Background...", "rolling=30 slice");
 	run("Enhance Contrast", "saturated=0.35");
 	
@@ -338,13 +337,13 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,prominence,radSmoot
 	nCells = nResults;
 	
 	
-	//--Measure green signal in nuclei
+	//--Measure Marker signal in nuclei
 	
 	run("Clear Results");
 	selectWindow("orig");
-	run("Duplicate...", "title=green duplicate channels="+cGreen);
+	run("Duplicate...", "title=Marker duplicate channels="+cMarker);
 	//run("Enhance Contrast", "saturated=0.35");
-	selectWindow("green");
+	selectWindow("Marker");
 	roiManager("Deselect");
 	roiManager("Measure");
 	InuclG = newArray(nCells);
@@ -358,7 +357,7 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,prominence,radSmoot
 	
 	selectWindow("orig");
 	close();
-	selectWindow("green");
+	selectWindow("Marker");
 	close();
 	selectWindow("cellMask");
 	close();
@@ -371,7 +370,7 @@ function if_dapi_green(output,InDir,name,cDAPI,cGreen,thDAPI,prominence,radSmoot
 		setResult("Label", i, MyTitle); 
 		setResult("# cell", i, j+1); 
 		setResult("Nuclear area (um2)", i, Anucl[j]); 
-		setResult("Avg green signal in nucleus", i, InuclG[i]); 	
+		setResult("Avg Marker signal in nucleus", i, InuclG[i]); 	
 	}
 	saveAs("Results", output+File.separator+"IF_quantification_"+MyTitle_short+".xls");
 		

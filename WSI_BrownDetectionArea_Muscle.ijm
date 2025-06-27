@@ -33,7 +33,7 @@ function macroInfo(){
 
 // Analyzed Images with ROIs
 
-	excel="Total.xls";
+	excel="Results_WSI_BrownDetectionArea_Muscle.xls";
 	feature1="Image Label";
 	feature2="Tissue Area (micra²)";
 	feature3="Stained area (micra²)";
@@ -174,177 +174,176 @@ function browndetection(output,InDir,name,r,th_tissue,th_brown)
 
 	
 	//getDimensions(width, height, channels, slices, frames);
-
-roiManager("Reset");
-run("Clear Results");
-MyTitle=getTitle();
-output=getInfo("image.directory");
-
-OutDir = output+File.separator+"AnalyzedImages";
-File.makeDirectory(OutDir);
-
-setBatchMode(true);
-run("Colors...", "foreground=white background=black selection=green");
-
-// DETECT TISSUE
-run("Select All");
-showStatus("Detecting tissue...");
-run("RGB to Luminance");
-rename("a");
-run("Threshold...");
-//setAutoThreshold("Huang");
-//getThreshold(lower, upper);
-	//th_tissue=230;
-setThreshold(0, th_tissue);
-run("Convert to Mask");
-
-//--Using tubeness
-run("Invert");
-run("Median...", "radius=1");
-run("Tubeness", "sigma=10 use");
-selectWindow("tubeness of a");
-run("8-bit");
-setThreshold(71, 255);
-setOption("BlackBackground", false);
-run("Convert to Mask");
-
-selectWindow("a");
-run("Median...", "radius=2");
-run("Invert");
-imageCalculator("Subtract", "a","tubeness of a");
-run("Invert");
-run("Open");
-run("Analyze Particles...", "size=500-Infinity pixel show=Masks in_situ");
-run("Invert");
-run("Analyze Particles...", "size=1000-Infinity pixel show=Masks in_situ");
-run("Create Selection");
-run("Add to Manager");	// ROI0 --> whole tissue
-selectWindow("a");
-close();
-selectWindow("tubeness of a");
-close();
-
-
-
-//BROWN--
-
-flagBrown=false;
-
-run("Colour Deconvolution", "vectors=[H&E DAB] hide");
-//selectWindow(MyTitle+"-(Colour_3)");
-selectWindow(MyTitle+"-(Colour_2)");
-close();
-selectWindow(MyTitle+"-(Colour_1)");
-close();
-selectWindow(MyTitle+"-(Colour_3)");
-
-run("Threshold...");
-setAutoThreshold("Default");
-	//th_brown=160;
-setThreshold(0, th_brown);
-setOption("BlackBackground", false);
-run("Convert to Mask");
-run("Median...", "radius=1");
-run("Analyze Particles...", "size=50-Infinity show=Masks in_situ");
-roiManager("Show None");
-run("Create Selection");
-type=selectionType();
-if(type==-1) {
-	makeRectangle(1, 1, 1, 1);
-	flagBrown=true;
-}
-run("Add to Manager");	// ROI1 --> Whole brown
-close();
-
-// Save just brown in tissue
-roiManager("Deselect");
-roiManager("Select", 0);
-roiManager("Select", newArray(0,1));
-roiManager("AND");
-type=selectionType();
-if(type==-1) {
-	makeRectangle(1, 1, 1, 1);
-	flagBrown=true;
-}
-roiManager("Add");
-roiManager("Deselect");
-roiManager("Select", 1);
-roiManager("Delete");
-
-// RESULTS--
-
-run("Clear Results");
-selectWindow(MyTitle);	
-run("Set Measurements...", "area redirect=None decimal=2");
-
-// Tissue
-roiManager("select", 0);
-roiManager("Measure");
-At=getResult("Area",0);
-//in micra
-Atm=At*r*r;
-
-// Staining
-roiManager("select", 1);
-roiManager("Measure");
-Ap=getResult("Area",1);
-//in micra
-Apm=Ap*r*r;
-
-if (flagBrown) {
-	Apm=0;
-}
-
-// Ratio
-r1=Apm/Atm*100;
-
-run("Clear Results");
-if(File.exists(output+File.separator+"Total.xls"))
-{
-	//if exists add and modify
-	open(output+File.separator+"Total.xls");
-	IJ.renameResults("Results");
-}
-i=nResults;
-setResult("Label", i, MyTitle); 
-setResult("Tissue area (micra²)",i,Atm);
-setResult("Stained area (micra²)",i,Apm);
-setResult("Ratio Astained/Atissue (%)",i,r1);			
-saveAs("Results", output+File.separator+"Total.xls");
-
-
-aa = split(MyTitle,".");
-MyTitle_short = aa[0];
-
-setBatchMode(false);
-selectWindow(MyTitle);
-rename("orig");
-
-roiManager("Show None");
-roiManager("Select", 0);
-roiManager("Set Color", "yellow");
-roiManager("Set Line Width", 2);
-run("Flatten");
-roiManager("Show None");
-roiManager("Select", 1);
-roiManager("Set Color", "green");
-roiManager("Set Line Width", 2);
-run("Flatten");
-saveAs("Jpeg", OutDir+File.separator+MyTitle_short+"_analyzed.jpg");
-rename(MyTitle_short+"_analyzed.jpg");
-
-selectWindow("Threshold");
-run("Close");
-selectWindow("orig");
-close();
-setTool("zoom");
-selectWindow("orig-1");
-close();
-
-if (InDir!="-") {
-close(); }
-
-//showMessage("Done!");
+	
+	roiManager("Reset");
+	run("Clear Results");
+	MyTitle=getTitle();
+	output=getInfo("image.directory");
+	
+	OutDir = output+File.separator+"AnalyzedImages";
+	File.makeDirectory(OutDir);
+	
+	setBatchMode(true);
+	run("Colors...", "foreground=white background=black selection=green");
+	
+	// DETECT TISSUE
+	run("Select All");
+	showStatus("Detecting tissue...");
+	run("RGB to Luminance");
+	rename("a");
+	run("Threshold...");
+	//setAutoThreshold("Huang");
+	//getThreshold(lower, upper);
+		//th_tissue=230;
+	setThreshold(0, th_tissue);
+	run("Convert to Mask");
+	
+	//--Using tubeness
+	run("Invert");
+	run("Median...", "radius=1");
+	run("Tubeness", "sigma=10 use");
+	selectWindow("tubeness of a");
+	run("8-bit");
+	setThreshold(71, 255);
+	setOption("BlackBackground", false);
+	run("Convert to Mask");
+	
+	selectWindow("a");
+	run("Median...", "radius=2");
+	run("Invert");
+	imageCalculator("Subtract", "a","tubeness of a");
+	run("Invert");
+	run("Open");
+	run("Analyze Particles...", "size=500-Infinity pixel show=Masks in_situ");
+	run("Invert");
+	run("Analyze Particles...", "size=1000-Infinity pixel show=Masks in_situ");
+	run("Create Selection");
+	run("Add to Manager");	// ROI0 --> whole tissue
+	selectWindow("a");
+	close();
+	selectWindow("tubeness of a");
+	close();
+	
+	
+	//BROWN--
+	
+	flagBrown=false;
+	
+	run("Colour Deconvolution", "vectors=[H&E DAB] hide");
+	//selectWindow(MyTitle+"-(Colour_3)");
+	selectWindow(MyTitle+"-(Colour_2)");
+	close();
+	selectWindow(MyTitle+"-(Colour_1)");
+	close();
+	selectWindow(MyTitle+"-(Colour_3)");
+	
+	run("Threshold...");
+	setAutoThreshold("Default");
+		//th_brown=160;
+	setThreshold(0, th_brown);
+	setOption("BlackBackground", false);
+	run("Convert to Mask");
+	run("Median...", "radius=1");
+	run("Analyze Particles...", "size=50-Infinity show=Masks in_situ");
+	roiManager("Show None");
+	run("Create Selection");
+	type=selectionType();
+	if(type==-1) {
+		makeRectangle(1, 1, 1, 1);
+		flagBrown=true;
+	}
+	run("Add to Manager");	// ROI1 --> Whole brown
+	close();
+	
+	// Save just brown in tissue
+	roiManager("Deselect");
+	roiManager("Select", 0);
+	roiManager("Select", newArray(0,1));
+	roiManager("AND");
+	type=selectionType();
+	if(type==-1) {
+		makeRectangle(1, 1, 1, 1);
+		flagBrown=true;
+	}
+	roiManager("Add");
+	roiManager("Deselect");
+	roiManager("Select", 1);
+	roiManager("Delete");
+	
+	// RESULTS--
+	
+	run("Clear Results");
+	selectWindow(MyTitle);	
+	run("Set Measurements...", "area redirect=None decimal=2");
+	
+	// Tissue
+	roiManager("select", 0);
+	roiManager("Measure");
+	At=getResult("Area",0);
+	//in micra
+	Atm=At*r*r;
+	
+	// Staining
+	roiManager("select", 1);
+	roiManager("Measure");
+	Ap=getResult("Area",1);
+	//in micra
+	Apm=Ap*r*r;
+	
+	if (flagBrown) {
+		Apm=0;
+	}
+	
+	// Ratio
+	r1=Apm/Atm*100;
+	
+	run("Clear Results");
+	if(File.exists(output+File.separator+"Results_WSI_BrownDetectionArea_Muscle.xls"))
+	{
+		//if exists add and modify
+		open(output+File.separator+"Results_WSI_BrownDetectionArea_Muscle.xls");
+		IJ.renameResults("Results");
+	}
+	i=nResults;
+	setResult("[Label]", i, MyTitle); 
+	setResult("Tissue area (micra²)",i,Atm);
+	setResult("Stained area (micra²)",i,Apm);
+	setResult("Ratio Astained/Atissue (%)",i,r1);			
+	saveAs("Results", output+File.separator+"Results_WSI_BrownDetectionArea_Muscle.xls");
+	
+	
+	aa = split(MyTitle,".");
+	MyTitle_short = aa[0];
+	
+	setBatchMode(false);
+	selectWindow(MyTitle);
+	rename("orig");
+	
+	roiManager("Show None");
+	roiManager("Select", 0);
+	roiManager("Set Color", "yellow");
+	roiManager("Set Line Width", 2);
+	run("Flatten");
+	roiManager("Show None");
+	roiManager("Select", 1);
+	roiManager("Set Color", "green");
+	roiManager("Set Line Width", 2);
+	run("Flatten");
+	saveAs("Jpeg", OutDir+File.separator+MyTitle_short+"_analyzed.jpg");
+	rename(MyTitle_short+"_analyzed.jpg");
+	
+	selectWindow("Threshold");
+	run("Close");
+	selectWindow("orig");
+	close();
+	setTool("zoom");
+	selectWindow("orig-1");
+	close();
+	
+	if (InDir!="-") {
+	close(); }
+	
+	//showMessage("Done!");
 
 }
 

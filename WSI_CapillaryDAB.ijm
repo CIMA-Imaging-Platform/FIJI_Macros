@@ -402,7 +402,7 @@ macro "CapillaryDAB Action Tool 1 - Cf00T0d12CT8d12aTfd12p"{
 		IJ.renameResults("Results");
 	}
 	i=nResults;
-	setResult("Label", i, MyTitle); 
+	setResult("[Label]", i, MyTitle); 
 	setResult("Analyzed area of tissue (um2)", i, Atm); 
 	setResult("# Capillaries", i, nCap);
 	saveAs("Results", output+File.separator+"Quantification_capillaries.xls");
@@ -767,7 +767,7 @@ macro "CapillaryDAB Action Tool 2 - Cf00T0d10AT6d10rTad10eTfd10a"{
 		IJ.renameResults("Results");
 	}
 	i=nResults;
-	setResult("Label", i, MyTitle); 
+	setResult("[Label]", i, MyTitle); 
 	setResult("Analyzed area of tissue (um2)", i, Atm); 
 	setResult("Area of capillaries (um2)", i, Acapm);
 	setResult("Ratio Acap/Atot (%)", i, r1);

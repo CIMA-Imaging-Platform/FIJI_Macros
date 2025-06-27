@@ -112,11 +112,11 @@ macro "BrownDetection Action Tool 1 - Cf00T2d15IT6d10m"{
 	//just one file
 	name=File.openDialog("Select File");
 	//print(name);
-					//setBatchMode(true);
-					print(name);
-					browndetection("-","-",name);
-					setBatchMode(false);
-					showMessage("Done!");
+	//setBatchMode(true);
+	print(name);
+	browndetection("-","-",name);
+	setBatchMode(false);
+	showMessage("Done!");
 
 		}
 macro "BrownDetection Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
@@ -154,7 +154,7 @@ function browndetection(output,InDir,name)
 	
 	
 	
-	
+	run("Collect Garbage");
 		
 	//getDimensions(width, height, channels, slices, frames);
 	
@@ -234,6 +234,7 @@ function browndetection(output,InDir,name)
 	At=getResult("Area",0);
 	//in micra
 	Atm=At*r*r;
+	
 	
 	// Staining
 	roiManager("select", 1);

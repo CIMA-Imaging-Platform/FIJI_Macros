@@ -1,7 +1,7 @@
 function macroInfo(){
 	
 // * Quantification of Sirius Red IHC on WSI Images Area  
-// * Target User: General
+// * Target User: Froilan Granero
 // *  
 
 	scripttitle= "Quantification of Sirius Red IHC WSImages";
@@ -39,19 +39,18 @@ function macroInfo(){
 
 // Analyzed Images with ROIs
 
-	excel="QuantificationResults_SiriusRed.xls";
+	excel="WSI_SiriusRed_Manual_Results.xls";
 	
 	feature1="Label";
-	feature2="Tissue Area (um2)";
-	feature3="Positive Area (um2)";
-	feature4="Ratio Ared/Atissue (%)";
-	feature5="Inflammation (um2)";
+	feature2="ROI Area (um2)";
+	feature3="Tissue Area (um2)";
+	feature4="Positive Sirius Red Area (um2)";
+	feature5="Inflamation Area (um2)";
+	feature6="Ratio Ared/Atissue (%)";
 	
 /*  	  
- *  version: 1.02 
- *  Author: Mikel Ariz  
- *  Commented by: Tomas Muñoz 2023 
- *  Date : 2015
+ *  version: 1.01 
+ *  Date : 09-2025
  *  
  */
 
@@ -100,11 +99,17 @@ function macroInfo(){
 	    +"<li>"+parameter3+"</li>"
 	    +"<li>"+parameter4+"</li></ul>"
 	    +"<p><font size=3  i>Quantification Results: </i></p>"
-	    +"<p><font size=3 i>AnalyzedImages folder: Visualize Segmented Images</i></p>"
 	    +"<p><font size=3  i>Excel "+excel+"</i></p>"
 	    +"<ul id=list-style-3><font size=2  i><li>"+feature1+"</li><li>"+feature2+"</li><li>"+feature3+"</li><li>"+feature4+"</li><li>"+feature5+"</li></ul>"
-	    +"<h0><font size=5></h0>"
-	    +"");
+	    +"<p><font size=3 i>AnalyzedImages folder: Visualize Segmented Images</i></p>"
+		+"<ul id=list-style-3><font size=2 i>"
+		+"<li>"+feature2+" --> <font color=blue>Blue contour</font></li>"
+		+"<li>"+feature3+" --> <font color=yellow>Yellow contour</font></li>"
+		+"<li>"+feature4+" --> <font color=green>Green contour</font></li>"
+		+"<li>"+feature5+" --> <font color=black>Black line</font></li>"
+		+"</ul>"
+		+"<h0><font size=5></h0>"
+		+"");
 
 	   //+"<P4><font size=2> For more detailed instructions see "+"<p4><a href=https://www.protocols.io/edit/movie-timepoint-copytoclipboard-tool-chutt6wn>Protocols.io</a><h4> </P4>"
 }
@@ -241,6 +246,16 @@ function analyzeSiriusRedImage(output,InDir,name,r,th_tissue, redThreshold,corrT
 		
 	// Retrieve image dimensions and set properties such as pixel width and height
 	getDimensions(width, height, channels, slices, frames);
+    
+    // check image channels encoding
+    getDimensions(width, height, channels, slices, frames);  
+    if (channels > 1){
+    	run("Make Composite");
+		run("RGB Color");
+		close(MyTitleShort);
+		rename(MyTitleShort);
+	}
+	
 	run("Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=" + r + " pixel_height=+" + r + " voxel_depth=1.0000 frame=[0 sec] origin=0,0");
 	
 	// Image Setup and Preprocessing
@@ -379,13 +394,10 @@ function processROI(iteration, orig, MyTitleShort, output, r, segMode, redThresh
 
 	// Quantify mask areas
 	measureAndExportResults(MyTitleShort, output, r, iteration);
-	
-	
-	
+		
 	// export laballed image
 	visualizationAndExport(export, OutDir, MyTitleShort);
 		
-	run("Clear Results");
 	roiManager("reset");
 	
 	

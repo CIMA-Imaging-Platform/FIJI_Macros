@@ -13,11 +13,128 @@ This repository contains a collection of ImageJ/Fiji macros for quantitative ima
 | CT_         | Computed Tomography (CT)                |
 | EM_         | Electron Microscopy                     |
 | IF_         | Immunofluorescence (2D)                 |
+| IF2Dtime_   | Immunofluorescence (2D time-lapse)      |
 | IF3D_       | Immunofluorescence (3D stacks)          |
 | IF4D_       | Immunofluorescence (4D: 3D + time)      |
 | PHC_        | Phase Contrast Microscopy               |
+| PHC3D_      | Phase Contrast (3D stacks)              |
 | WF_         | Widefield Microscopy                    |
 | WSI_        | Whole Slide Imaging (histology slides)  |
+
+---
+
+## Platform Overview
+
+**Institution:** CIMA – Center for Applied Medical Research, University of Navarra (cima.cun.es)
+**Service:** Imaging Platform – Software Development Unit
+**Contact:** Tomás Muñoz Santoro (tmsantoro@unav.es)
+
+---
+
+### Image Modalities
+
+| Modality | Prefix / Files | Details |
+|----------|---------------|---------|
+| Immunofluorescence 2D | `IF_` | Confocal / epifluorescence, CZI & TIF |
+| Immunofluorescence 2D time-lapse | `IF2Dtime_` | Time series, single plane |
+| Immunofluorescence 3D | `IF3D_` | Z-stack confocal, volumetric analysis |
+| Immunofluorescence 4D | `IF4D_` | Live time-lapse + Z-stack |
+| Whole Slide Imaging | `WSI_` | SVS digital pathology scanner |
+| Phase Contrast 2D | `PHC_` | Label-free transmitted light |
+| Phase Contrast 3D | `PHC3D_` | Z-stack phase contrast (organoids) |
+| Widefield fluorescence | `WF_` | Standard epifluorescence |
+| Micro-CT | `CT_` | 3D computed tomography volumes |
+| Electron Microscopy | `EM_` | TEM ultrastructure (liposomes) |
+| FISH / RNA ISH | `IF_FISH`, `old/PipelineFISH`, `old/IF_ISH_HDV_F480` | Fluorescence in situ hybridization and RNA chromogenic ISH |
+| Serial section IHC with registration | `IF_GFP_GP100` | SIFT-aligned serial H&E + DAB sections |
+| Multispectral | `IF_CellClassPhenotype_Vectra` | Vectra/Polaris multispectral unmixing |
+
+---
+
+### Tissue and Sample Types
+
+#### Organs and Tissues
+
+| Organ | Key Macros |
+|-------|-----------|
+| Brain | `WSI_BrownDetectionArea_Brain*`, `WSI_BrainTumor*`, `WSI_Brain_SynNM`, `IF3D_MicrogliaMarkerColoc`, `IF3D_NeuronFiberColoc`, `IF3D_NeuronMicrogliaProteinColoc`, `IF3D_NeuronPhagocytosis`, `IF_Neuron`, `IF_Soma_and_axon_size_2D`, `IF_AggregatesCount` |
+| Heart / Cardiac | `WSI_BrownDetectionArea_Heart`, `WSI_SiriusRedCardio`, `WSI_SiriusRedPerivascular`, `WSI_Desmin`, `IF_CardioFibroblast`, `IF_CardiomyocytesCount`, `IF_CardioAngiogenesis`, `IF_CardioDeath`, `IF_CardioHypertrophy`, `IF3D_SarcomereAnalysis`, `IF_manualCardio_v2`, `IF_LamininCSA_v2` |
+| Liver | `WSI_BrownDetectionArea_Liver`, `WSI_Steatosis`, `WSI_SiriusRed*`, `Adipophilin`, `old/IF_ISH_HDV_F480`, `CT_LiverTumors` |
+| Lung | `WSI_BrownDetectionArea_Lung`, `WSI_LungNodulesHE`, `WSI_LungTissueCD3`, `CT_LungVolume_Auto` |
+| Muscle | `WSI_BrownDetectionArea_Muscle`, `WSI_Desmin`, `IF_LamininCSA_v2`, `old/SiriusRed_v2.0_Muscle` |
+| Spleen | `WSI_BrownDetectionArea_Spleen` |
+| Retina | `IF3D_RetinVasculature`, `RetinVasculature3D` |
+| Aorta | `IF_AorticRings`, `AorticRings_ManualRing` |
+| Bone | `CT_BoneAnalysis_FemurMonetite`, `CT_BoneFat_PrePost`, `CT_tibiaCartige`, `CT_Manguito`, `WSI_TRAP`, `WSI_MMPsafranin`, `WSI_CartilageToulinaBlue` |
+| Rotator cuff | `CT_Manguito`, `IF3D_ManguitoRotador` |
+| Brown / White Adipose | `WSI_BrownFatSize`, `Adiposoft17`, `CT_BoneFat_PrePost` |
+| Lymph nodes | `WSI_LymphTcount` |
+
+#### In Vitro / Cell Models
+
+| Model | Key Macros |
+|-------|-----------|
+| Organoids (3D) | `PHC3D_OrganoidCount` |
+| Transwell migration / invasion | `WSI_PAS_Transwell`, `WSI_TranswellCells` |
+| Aortic ring angiogenesis | `IF_AorticRings`, `AorticRings_ManualRing` |
+| Monocytes (brightfield) | `PHC_MonocyteCount` |
+| Biofilms | `IF3D_BiofilmQuantification`, `IF3D_BiofilmQuantification_Cocultivos`, `IF3D_BiofilmQuantification_LiveDead`, `IF4D_BiofilmQuantification`, `IF_BiofilmLiveDead` |
+| Bacteria | `IF_Bacteria` |
+| Liposomes | `EM_Liposoms` |
+
+#### Circulating / Rare Cells
+
+| Cell type | Key Macros |
+|-----------|-----------|
+| Circulating Tumor Cells (CTCs) | `IF_CellClass_CTCphenotype` |
+| Neutrophils / NETs | `IF_NETs`, `IF_Neutrophils_N2` |
+| Platelets | `IF_Vessels_Platelets` |
+
+---
+
+### Staining and Labeling Techniques
+
+| Technique | Description | Key Macros |
+|-----------|-------------|-----------|
+| Immunofluorescence (multichannel, DAPI) | Standard fluorescent markers | Most `IF_*` files |
+| DAB chromogenic IHC (brown) | Peroxidase-based brown detection | `WSI_BrownDetectionArea_*`, `WSI_DABintensity_ROIs`, `WSI_CapillaryDAB` |
+| H&E (hematoxylin & eosin) | Standard histology stain | `WSI_NecrosisHE`, `WSI_LungNodulesHE`, `IF_GFP_GP100` |
+| Sirius Red (collagen / fibrosis) | Fibrillar collagen detection | `WSI_SiriusRed*` (5 variants) |
+| Safranin-O (cartilage GAGs) | Proteoglycan detection | `WSI_MMPsafranin` |
+| Toluidine Blue (cartilage) | Proteoglycan / ECM staining | `WSI_CartilageToulinaBlue` |
+| PAS (glycoproteins / glycogen) | Polysaccharide detection | `WSI_PAS_Transwell` |
+| TRAP (osteoclasts) | Tartrate-resistant acid phosphatase | `WSI_TRAP` |
+| Eosin intensity | Cytoplasmic stain intensity | `WSI_EosinIntensity` |
+| FISH | Fluorescence in situ hybridization | `IF_FISH`, `old/PipelineFISH_Aqua` |
+| RNA ISH | Chromogenic RNA detection (HDV) | `old/IF_ISH_HDV_F480` |
+| GFP / fluorescent reporters | Live/fixed reporter gene imaging | `IF_GFP_GP100` |
+| Live/Dead viability | Cell viability discrimination | `IF_CellClassLifeDead`, `IF_CellLifeDead_ChannelDispo`, `IF3D_BiofilmQuantification_LiveDead` |
+| Osmium (bone marrow fat, CT) | Lipid staining for microCT | `CT_BoneFat_PrePost` |
+| Adipophilin (lipid droplets) | Lipid droplet surface marker | `Adipophilin` |
+| Multispectral unmixing | Simultaneous multi-marker separation | `IF_CellClassPhenotype_Vectra` |
+| Colour deconvolution H&E DAB | Chromogen separation | `IF_GFP_GP100`, `WSI_*` |
+
+---
+
+### Research Domains and Biological Targets
+
+| Domain | Specific Targets | Key Macros |
+|--------|-----------------|-----------|
+| Neuroscience / Neuropathology | Microglia (IBA1), neurons, myelin (MBP, SMI38), neuromelanin, synuclein, axon/soma size, phagocytosis, neuron–microglia interaction, protein aggregates | `IF3D_Microglia*`, `IF3D_Neuron*`, `WSI_Brain*` |
+| Cardiology | Cardiomyocytes, fibroblasts, sarcomeres, hypertrophy, cell death, angiogenesis, fibrosis (Sirius Red), Desmin, Laminin | `IF_Cardio*`, `IF3D_SarcomereAnalysis`, `WSI_SiriusRedCardio*` |
+| Oncology / Tumor biology | GFP+/GP100+ (melanoma), CTCs, brain tumors (IBA1, CD markers), lung nodules, necrosis, immune infiltration | `IF_GFP_GP100`, `IF_CellClass_CTC*`, `WSI_BrainTumor*`, `WSI_LungNodulesHE` |
+| Hepatology | Steatosis, lipid droplets (adipophilin), fibrosis (Sirius Red), HDV RNA in macrophages, liver tumors | `WSI_Steatosis`, `Adipophilin`, `old/IF_ISH_HDV_F480`, `CT_LiverTumors` |
+| Immunology / Inflammation | CD3 T-cells, CD45 leukocytes, CD markers (generic), IBA1 microglia/macrophages, M1/M2 macrophage polarization, neutrophils N2, NETs (NETosis), thrombus macrophage phenotype, lymphocytes T | `WSI_CD*`, `IF_MacrophageClass`, `IF_NETs`, `IF_TrombosM1M2` |
+| Orthopedics / Biomaterials | Femur (Monetite implant / bone ingrowth), tibia cartilage thickness, rotator cuff, TRAP osteoclasts, cartilage GAGs | `CT_BoneAnalysis_FemurMonetite`, `CT_Manguito`, `WSI_TRAP`, `WSI_MMPsafranin` |
+| Vascular biology | Angiogenesis (aortic rings, capillaries), vessel tortuosity, retinal vasculature, platelets, fibrin mesh | `IF_Angiogenesis`, `IF3D_VesselsTortousity`, `IF_FibrinMesh*`, `IF_Vessels_Platelets` |
+| Microbiology / Infection | Biofilm (live/dead, co-cultures, 4D live), bacteria quantification, live infection (4D) | `IF3D_Biofilm*`, `IF4D_*`, `IF_Bacteria` |
+| DNA damage / Genotoxicity | DNA damage foci (Rhodamine), nuclear foci in tissue | `IF_FociClass`, `IF_FociTissue` |
+| Cell stress / Molecular biology | ATF4 (ER stress / UPR), protein aggregates, centrosomes, nuclear protein colocalization, nucleolus, nuclear dots | `IF_ATF4`, `IF_AggregatesCount`, `IF3D_Centriolos`, `IF_Nucleolos*`, `IF3D_NuclearDots` |
+| Adipose biology / Metabolism | White adipose cellularity, brown fat size, bone marrow fat (osmium microCT) | `Adiposoft17`, `WSI_BrownFatSize`, `CT_BoneFat_PrePost` |
+| Nanomedicine | Liposome ultrastructure (TEM), nanoparticle tracking in live cells | `EM_Liposoms`, `IF_NanoTrack` |
+| Pulmonology | Lung nodules (H&E), CD3 infiltration in lung, lung volume (CT) | `WSI_LungNodulesHE`, `WSI_LungTissueCD3`, `CT_LungVolume_Auto` |
+| Ophthalmology | 3D retinal vasculature reconstruction and quantification | `IF3D_RetinVasculature`, `RetinVasculature3D` |
+| Environmental / Toxicology | Microplastic detection in tissue | `IF_TissueMicroPlastics` |
 
 ---
 

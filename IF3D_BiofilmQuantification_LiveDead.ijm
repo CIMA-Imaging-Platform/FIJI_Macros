@@ -117,7 +117,7 @@ showMessage("ImageJ Script", "<html>"
 // Segmentation of the biofilm in 3D
 // Quantification of biofilm volume
 
-var cLife=2 , cDead=1 , displacement=1, thBac=50, thBacDead=30, minBacSize=30;
+var cLife=2 , cDead=1 , displacement=1, thBac=15, thBacDead=15, minBacSize=5;
 
 macro "BiofilmQuantification3D Action Tool 1 - Cf00T2d15IT6d10m"{
 	
@@ -208,7 +208,6 @@ function biofilm3d(output,InDir,name,displacement,cLife,cDead,thBac,thBacDead,mi
 		}	
 	
 	
-	run("Set Measurements...", "area mean min redirect=None decimal=2");
 	roiManager("Reset");
 	run("Clear Results");
 	MyTitle=getTitle();
@@ -221,10 +220,10 @@ function biofilm3d(output,InDir,name,displacement,cLife,cDead,thBac,thBacDead,mi
 	MyTitle_short = aa[0];
 	
 	run("Colors...", "foreground=black background=white selection=yellow");
-	
+	run("Set Measurements...", "area mean min redirect=None decimal=2");
+	run("Options...", "iterations=1 count=1");
 	Stack.getDimensions(width, height, channels, slices, frames);
 	getVoxelSize(vx, vy, vz, unit);
-	FOV=(width*height*slices)*(vx*vy*vz); 
 	
 	rename("orig");
 			
@@ -238,58 +237,94 @@ function biofilm3d(output,InDir,name,displacement,cLife,cDead,thBac,thBacDead,mi
 	
 	setBatchMode(true);
 	
-	/*
-	//--Background subtraction
-	run("Duplicate...", "title=filtered duplicate");
+	//-- DETECT FOCUS PLANE -->  Slice with Max Signal Contrast
 	selectWindow("orig");
-	run("Mean...", "radius=3 stack");
-	selectWindow("filtered");
-	run("Mean...", "radius=50 stack");
-	imageCalculator("Subtract stack", "orig","filtered");
-	selectWindow("filtered");
-	close();
-	*/
+	getDimensions(width, height, channels, slices, frames);
+	run("Duplicate...", "title=focus duplicate channels="+cLife+"");
 	
-	run("Subtract Background...", "rolling=20 stack");
+	run("Select All");
+	run("Clear Results");
+	run("GLCM Texture", "enter=2 select=[0 degrees] angular contrast correlation inverse entropy");
+	selectWindow("Results");
+	contrastSliceI=Table.getColumn("Contrast");
+	Array.getStatistics(contrastSliceI, min, max, mean, stdDev);
+	maxContrast=Array.findMaxima(contrastSliceI,stdDev);
+	Array.print(newArray(min, max, mean, stdDev));
+	Array.print(maxContrast);
 	
+	selectWindow("focus");
+	if (maxContrast[0]==0){
+		focusSlice = 1;
+	}else{
+		focusSlice = maxContrast[0]-5;
+		if(focusSlice < 1){
+			focusSlice = 1;
+		}
+	}
+	setSlice(focusSlice);
+	
+	run("Clear Results");
+	selectWindow("orig");
+	run("Duplicate...", "title=orig_focus duplicate slices="+focusSlice+"-"+slices+"");
+	close("focus");
+	close("orig");
+	
+	selectWindow("orig_focus");
+	getDimensions(width, height, channels, slices, frames);
+	FOV=(width*height*slices)*(vx*vy*vz); 
+		
 	//--PROCESS LIVE
-	
-	selectWindow("orig");
+	selectWindow("orig_focus");
 	run("Duplicate...", "title=live duplicate channels="+cLife+"");
-	
+		
 	//--Preprocessing
 	//run("Unsharp Mask...", "radius=5 mask=0.60 stack");
-	setMinAndMax(15, 255);
+	//setMinAndMax(5, 255);
 	run("Apply LUT", "stack");
-	
-	run("3D Fast Filters","filter=Mean radius_x_pix=1.0 radius_y_pix=1.0 radius_z_pix=1.0 Nb_cpus=16");
+	run("3D Fast Filters","filter=Median radius_x_pix=1.0 radius_y_pix=1.0 radius_z_pix=1.0 Nb_cpus=16");
 	close("live");
 	rename("live");
+	run("Subtract Background...", "rolling=100 stack");
 	
 	//--Thresholding methods
 	
 	//autoThreshold("live","Otsu");
 	//percHistMode("live");
 	fixThreshold("live",thBac);
-	
-	
+		
 	//--Post-processing
 	//run("Close-", "stack");
 	run("Median...", "radius=1 stack");
-	//minBacSize=50;
+	//minBacSize=10;
 	run("Analyze Particles...", "size="+minBacSize+"-Infinity pixel show=Masks in_situ stack");
+
 	
-		
 	//--PROCESS DEAD BACTERIA
 	
-	selectWindow("orig");
+	selectWindow("orig_focus");
 	run("Duplicate...", "title=dead duplicate channels="+cDead+"");
 	
 	//--Preprocessing
-	setMinAndMax(15, 255);
+	//setMinAndMax(5, 255);
+	
+	run("Measure Stack...");
+	selectWindow("Results");
+	meanSliceI=Table.getColumn("Mean");
+	Array.getStatistics(meanSliceI, min, max, mean, stdDev);
+	Array.print(newArray(min, max, mean, stdDev));
+	maxMarker1=Array.findMaxima(meanSliceI,stdDev);
+	Array.print(maxMarker1);
+	selectWindow("dead");
+	if (maxMarker1[0]==0){
+		setSlice(1);
+	}else{
+		setSlice(maxMarker1[0]+1);
+	}
+		
+	run("Enhance Contrast", "saturated=0.35");
 	run("Apply LUT", "stack");
 	
-	run("3D Fast Filters","filter=Mean radius_x_pix=1.0 radius_y_pix=1.0 radius_z_pix=1.0 Nb_cpus=16");
+	run("3D Fast Filters","filter=Median radius_x_pix=1.0 radius_y_pix=1.0 radius_z_pix=1.0 Nb_cpus=16");
 	close("dead");
 	rename("dead");
 	
@@ -299,12 +334,10 @@ function biofilm3d(output,InDir,name,displacement,cLife,cDead,thBac,thBacDead,mi
 	//percHistMode("dead");
 	fixThreshold("dead",thBacDead);
 	
-
-	
 	//--Post-processing
 	//run("Close-", "stack");
 	run("Median...", "radius=1 stack");
-	//minBacSize=50;
+	//minBacSize=30;
 	run("Analyze Particles...", "size="+minBacSize+"-Infinity pixel show=Masks in_situ stack");
 	
 	
@@ -317,7 +350,7 @@ function biofilm3d(output,InDir,name,displacement,cLife,cDead,thBac,thBacDead,mi
 	selectWindow("live");
 	run("Analyze Particles...", "size="+minBacSize+"-Infinity pixel show=Masks in_situ stack");
 
-	selectWindow("orig");
+	selectWindow("orig_focus");
 	run("Duplicate...", "title=imageToSave duplicate ");
 	Stack.setChannel(cLife);
 	run("Green");
@@ -331,8 +364,6 @@ function biofilm3d(output,InDir,name,displacement,cLife,cDead,thBac,thBacDead,mi
 	saveAs("Tiff", output+File.separator+"AnalyzedImages"+File.separator+MyTitle+"_LifeDead_Overlay.tif");
 	
 	//--COMBINE MASKS
-	
-
 	
 	//--Whole biofilm mask
 	imageCalculator("OR create stack", "live","dead");
@@ -352,8 +383,6 @@ function biofilm3d(output,InDir,name,displacement,cLife,cDead,thBac,thBacDead,mi
 	wait(100);
 	rename("dead");
 	
-	
-	
 	//--RESULTS
 	
 	//--Calculate total biofilm volume
@@ -368,7 +397,6 @@ function biofilm3d(output,InDir,name,displacement,cLife,cDead,thBac,thBacDead,mi
 	else {
 		Vbiofilm = getResult("Volume", 0);			// biofilm volume
 	}
-	
 	
 	//--Calculate dead volume
 	run("Clear Results");
@@ -396,8 +424,7 @@ function biofilm3d(output,InDir,name,displacement,cLife,cDead,thBac,thBacDead,mi
 	
 	//--Dead bacteria ratio
 	rDead = 100-rLive;
-	
-	
+		
 	//--Measure the most dense slice:
 	
 	selectWindow("biofilm");
@@ -482,10 +509,6 @@ function autoThreshold(image,method){
 	}else{
 		setSlice(maxMarker1[0]+1);
 	}
-	run("Enhance Contrast", "saturated=0.1");
-	run("Apply LUT", "stack");
-	run("Gaussian Blur...", "sigma=1 stack");
-		
 	//--Thresholding
 	if(method == "Huang"){
 		setAutoThreshold("Huang dark");
@@ -544,33 +567,11 @@ function percHistMode(image){
 function fixThreshold(image,thBac){
 	
 	selectWindow(image);
-	
-	run("Clear Results");
-	
-	// Find Slice with Max Signal
-	run("Select All");
-	run("Measure Stack...");
-	selectWindow("Results");
-	meanSliceI=Table.getColumn("Mean");
-	Array.getStatistics(meanSliceI, min, max, mean, stdDev);
-	Array.print(newArray(min, max, mean, stdDev));
-	maxMarker1=Array.findMaxima(meanSliceI,stdDev);
-	Array.print(maxMarker1);
-	selectWindow(image);
-	if (maxMarker1[0]==0){
-		setSlice(1);
-	}else{
-		setSlice(maxMarker1[0]+1);
-	}
-	//run("Enhance Contrast", "saturated=0.1");
-	//run("Apply LUT", "stack");
-	//run("Gaussian Blur...", "sigma=2 stack");
-		
-	selectWindow(image);
 	setThreshold(thBac, 255);
+	
 
 	setOption("BlackBackground", false);
-	run("Convert to Mask", "method=Default background=Dark");
+	run("Convert to Mask", "method=Huang background=Dark");
 }
 
 function addOverlay3D(rawImage,maskImage,channel,color){

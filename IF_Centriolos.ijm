@@ -6,8 +6,8 @@ function macroInfo() {
 	 */
 
 	scripttitle= "Quantification of Centriolos Distances to each Nuclei in IF images";
-	version= "1.01";
-	date= "2024";
+	version= "1.02";
+	date= "2026";
 	
 
 	//  Tests Images:
@@ -41,7 +41,7 @@ function macroInfo() {
 	// Analyzed Images with ROIs
 
 	excel="QuantificationResults_IF_Centriolos.xls";
-	feature1 = "Label";
+	feature1 = "[Label]";
 	feature2 = "# Cell"; 
 	feature3 = "Nucl Equiv Radius (um)";
 	feature4 = "# Assoc Centr";
@@ -107,20 +107,49 @@ function macroInfo() {
 
 
 
-var cNucl=1	, cCent=2, thBlue=17, thCyto=17, findMaxima=35 ,minSize=500, maxSize=50000, minCirc=0, ThDist=6;
+var cNucl=1	, cCent=2, thBlue=17, thCyto=17, findMaxima=1 ,minSize=3500, maxSize=50000, minCirc=0, ThDist=10;
 
 macro "InmunoFluor Action Tool 1 - Cf00T2d15IT6d10m"{
 	
 	close("*");
 	
 	macroInfo();
-	
+
 	//just one file
 	name=File.openDialog("Select File");
 	//print(name);
 	//setBatchMode(true);
 	//print(name);
-	inmunofluor("-","-",name);
+
+	
+    Dialog.create("Parameters");
+	Dialog.addMessage("Choose parameters");
+	Dialog.addNumber("DAPI channel", cNucl);
+	Dialog.addNumber("Centriolos Channel", cCent);
+	items = newArray("Manual","Automatic");
+	Dialog.addChoice("Manual", items);
+	Dialog.addNumber("Nucl threshold", thCyto);
+	Dialog.addNumber("Centriolos threshold", thCyto);
+	Dialog.addNumber("Detect Centriolos", findMaxima);
+	Dialog.addNumber("Min nucleus size", minSize);	
+	Dialog.addNumber("Max nucleus size", maxSize);	
+	Dialog.addNumber("Min nucleus circularity", minCirc);
+	Dialog.addNumber("Max allowed distance to nucleus", ThDist);			
+	Dialog.show();	
+	cNucl = Dialog.getNumber();
+	cCent = Dialog.getNumber();
+	method = Dialog.getChoice();
+	thBlue = Dialog.getNumber();
+	thCyto= Dialog.getNumber();
+	findMaxima = Dialog.getNumber();	
+	minSize= Dialog.getNumber();
+	maxSize= Dialog.getNumber();	
+	minCirc= Dialog.getNumber();	
+	ThDist= Dialog.getNumber();	
+	
+	detectCentriolos("-","-",name,cNucl,cCent,thBlue,thCyto,findMaxima,minSize,maxSize,ThDist,method);
+	
+	
 	setBatchMode(false);
 	showMessage("Done!");
 
@@ -132,6 +161,31 @@ macro "InmunoFluor Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	
 	macroInfo();
 	
+    Dialog.create("Parameters");
+	Dialog.addMessage("Choose parameters");
+	Dialog.addNumber("DAPI channel", cNucl);
+	Dialog.addNumber("Centriolos Channel", cCent);
+	items = newArray("Manual","Automatic");
+	Dialog.addChoice("Manual", items);
+	Dialog.addNumber("Nucl threshold", thCyto);
+	Dialog.addNumber("Centriolos threshold", thCyto);
+	Dialog.addNumber("Detect Centriolos", findMaxima);
+	Dialog.addNumber("Min nucleus size", minSize);	
+	Dialog.addNumber("Max nucleus size", maxSize);	
+	Dialog.addNumber("Min nucleus circularity", minCirc);
+	Dialog.addNumber("Max allowed distance to nucleus", ThDist);			
+	Dialog.show();	
+	cNucl = Dialog.getNumber();
+	cCent = Dialog.getNumber();
+	method = Dialog.getChoice();
+	thBlue = Dialog.getNumber();
+	thCyto= Dialog.getNumber();
+	findMaxima = Dialog.getNumber();	
+	minSize= Dialog.getNumber();
+	maxSize= Dialog.getNumber();	
+	minCirc= Dialog.getNumber();	
+	ThDist= Dialog.getNumber();	
+
 	InDir=getDirectory("Choose a Directory");
 	list=getFileList(InDir);
 	L=lengthOf(list);
@@ -144,69 +198,14 @@ macro "InmunoFluor Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 			name=list[j];
 			//print(name);
 			//setBatchMode(true);
-			inmunofluor(InDir,InDir,list[j]);
+			detectCentriolos(InDir,InDir,list[j],cNucl,cCent,thBlue,thCyto,findMaxima,minSize,maxSize,ThDist,method);
 			setBatchMode(false);
 			}
 	}
 	showMessage("Done!");
 }
 
-
-
-macro "InmunoFluor Action Tool 1 Options" {
-    Dialog.create("Parameters");
-
-	Dialog.addMessage("Choose parameters");
-	Dialog.addNumber("DAPI channel", cNucl);
-	Dialog.addNumber("Centriolos Channel", cCent);
-	Dialog.addNumber("Nucl threshold", thCyto);
-	Dialog.addNumber("Centriolos threshold", thCyto);
-	Dialog.addNumber("Detect Centriolos", findMaxima);
-	Dialog.addNumber("Min nucleus size", minSize);	
-	Dialog.addNumber("Max nucleus size", maxSize);	
-	Dialog.addNumber("Min nucleus circularity", minCirc);
-	Dialog.addNumber("Max allowed distance to nucleus", ThDist);			
-	Dialog.show();	
-	cNucl = Dialog.getNumber();
-	cCent = Dialog.getNumber();
-	thBlue = Dialog.getNumber();
-	thCyto= Dialog.getNumber();	
-	findMaxima = Dialog.getNumber();	
-	minSize= Dialog.getNumber();
-	maxSize= Dialog.getNumber();	
-	minCirc= Dialog.getNumber();	
-	ThDist= Dialog.getNumber();	
-}
-
-macro "InmunoFluor Action Tool 2 Options" {
-    Dialog.create("Parameters");
-
-	Dialog.addMessage("Choose parameters");
-	Dialog.addNumber("DAPI channel", cNucl);
-	Dialog.addNumber("Centriolos Channel", cCent);
-	Dialog.addNumber("Nucl threshold", thCyto);
-	Dialog.addNumber("Centriolos threshold", thCyto);
-	Dialog.addNumber("Detect Centriolos", findMaxima);
-	Dialog.addNumber("Min nucleus size", minSize);	
-	Dialog.addNumber("Max nucleus size", maxSize);	
-	Dialog.addNumber("Min nucleus circularity", minCirc);
-	Dialog.addNumber("Max allowed distance to nucleus", ThDist);			
-	Dialog.show();	
-	cNucl = Dialog.getNumber();
-	cCent = Dialog.getNumber();
-	thBlue = Dialog.getNumber();
-	thCyto= Dialog.getNumber();
-	findMaxima = Dialog.getNumber();	
-	minSize= Dialog.getNumber();
-	maxSize= Dialog.getNumber();	
-	minCirc= Dialog.getNumber();	
-	ThDist= Dialog.getNumber();	
-}
-
-
-
-
-function inmunofluor(output,InDir,name)
+function detectCentriolos(output,InDir,name,cNucl,cCent,thBlue,thCyto,findMaxima,minSize,maxSize,ThDist,method)
 {
 	
 	if (InDir=="-") {
@@ -251,10 +250,11 @@ function inmunofluor(output,InDir,name)
 	// GET 2D PROJECTIONS
 	// DAPI (median projection)
 	selectWindow("blueStack");
-	run("Z Project...", "projection=Median");
+	run("Subtract Background...", "rolling=85 stack");
+	run("Z Project...", "projection=[Max Intensity]");
 	rename("blue");
 	run("8-bit");
-	run("Enhance Contrast", "saturated=0.35");
+	run("Enhance Local Contrast (CLAHE)", "blocksize=150 histogram=256 maximum=2 mask=*None* fast_(less_accurate)");
 	selectWindow("blueStack");
 	close();
 	
@@ -283,26 +283,74 @@ function inmunofluor(output,InDir,name)
 	
 	//run("Duplicate...", "title=blue duplicate channels=1");
 	selectWindow("blue");
-	run("Duplicate...", "title=aa");
+	run("Duplicate...", "title=nucleiMask");
 	//run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");	//remove scale
-	run("Subtract Background...", "rolling=150");	
+	run("Subtract Background...", "rolling=100");	
 	run("8-bit");
-	run("Mean...", "radius=2");
+	run("Mean...", "radius=5");
 	setAutoThreshold("Default dark");
 	//getThreshold(lower,upper);
 	//setThreshold(lower*thBlueFactor, 255);
-	//thBlue=17;
-	setThreshold(thBlue, 255);
+	//thBlue=19;
+	selectWindow("nucleiMask");
+	if (method == "Manual"){
+		run("Threshold...");
+		waitForUser("Set DAPI threshold Manually");
+	}else{
+		setThreshold(thBlue, 255);
+	}
+	setBatchMode(true);
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
 	run("Median...", "radius=2");
 	run("Open");
-	run("Fill Holes");
-	run("Adjustable Watershed", "tolerance=1");
-	run("Analyze Particles...", "size="+minSize+"-"+maxSize+" circularity="+minCirc+"-1.00 show=Masks display clear add in_situ");
+	run("Analyze Particles...", "size=3500-Inf pixel  show=Masks in_situ");
+	run("Invert");
+	run("Analyze Particles...", "size=350-Inf pixel  show=Masks in_situ");
+	run("Invert");
+	
+	selectImage("nucleiMask");
+	run("Duplicate...", "ignore title=edm");
+	run("Distance Map");
+	run("Find Maxima...", "prominence=1 light output=[Single Points]");
+	close("edm");
+	rename("maxima");
+	selectImage("nucleiMask");
+	run("Duplicate...", "ignore title=edges");
+	run("Find Edges");
+	run("Marker-controlled Watershed", "input=edges marker=maxima mask=nucleiMask binary calculate use");
+	selectWindow("edges-watershed");
+	run("8-bit");
+	setThreshold(1, 255);
+	run("Convert to Mask");
+	//minSize = 3500;
+	//maxSize = 30000;
+	run("Analyze Particles...", "size="+minSize+"-"+maxSize+" pixel  show=Masks clear add in_situ");
+	
+	run("Select None");
+	roiManager("show none");
+	run("Duplicate...", "title=elipses");
+	run("Select All");
+	run("Clear", "slice");
+	
+	nCells = roiManager("count");
+	for (c = 0; c < nCells; c++) {
+		selectWindow("elipses");
+		run("Select None");
+		roiManager("select", c);
+		run("Fit Ellipse");
+		fill();
+	}
+	run("Select None");
+	run("Watershed");
+	roiManager("reset");
+	run("Analyze Particles...", "show=Masks clear add in_situ");
+	roiManager("Save", OutDir+File.separator+MyTitle_short+"_ROI_nuclei.zip");
 	//run("Analyze Particles...", "size=500-50000 pixel circularity=0.2-1.00 show=Masks display clear add in_situ");
-	selectWindow("aa");
-	close();
+	close("nucleiMask");
+	close("elipses");
+	close("maxima");
+	
 	selectWindow("blue");
 	run("8-bit");
 	nCells=nResults;
@@ -317,17 +365,22 @@ function inmunofluor(output,InDir,name)
 		xn[i]=getResult("X",i);
 		yn[i]=getResult("Y",i);
 	}
-	selectWindow("blue");
-	//close();
-	roiManager("Save", output+File.separator+"ROI_nuclei.zip");
-	//roiManager("Save", OutDir+File.separator+MyTitle_short+"_ROI.zip");
+	
+	
+	print("Nucleus coordinates");
+	print("X");
+	Array.print(xn);
+	print("Y");
+	Array.print(yn);
+
+	close("aa*");
+	close("edges*");
 	roiManager("Reset");
 	
 	// DETECT CENTRIOLES IN Cyto--
-	
 	run("Clear Results");
 	selectWindow("Cyto");
-	run("Subtract Background...", "rolling=2");
+	run("Subtract Background...", "rolling=8");
 	// Calculate modal value and subtract it:
 	run("Set Measurements...", "area mean modal min centroid display redirect=None decimal=2");
 	run("Measure");
@@ -338,53 +391,56 @@ function inmunofluor(output,InDir,name)
 	
 	// Find maxima in Cyto:
 	selectWindow("Cyto");
+	//findMaxima = 1; 
+	//run("Find Maxima...");
 	run("Find Maxima...", "noise="+findMaxima+" output=[Single Points]");
 	rename("CytoMaxima");
-	
+
 	// Threshold Cyto image:
 	selectWindow("Cyto");
 	run("Duplicate...", "title=CytoMask");
 	//run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");	//remove scale
-	setThreshold(thCyto, 255);
-	//setThreshold(32, 255);
+	setBatchMode("exit and display");
+	selectWindow("CytoMask");
+	if (method == "Manual"){
+		run("Threshold...");
+		waitForUser("Set Centriolos threshold Manually");
+	}else{
+		setThreshold(thCyto, 255);
+	}
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
-	run("Analyze Particles...", "size=2-Inf show=Masks in_situ");
+	run("Analyze Particles...", "size=2-Inf pixel show=Masks in_situ");
 	run("Create Selection");
 	//roiManager("Add");
 	selectWindow("CytoMaxima");
 	run("Select None");
 	run("Restore Selection");
+	run("Enlarge...", "enlarge=2 pixel");
 	setBackgroundColor(255, 255, 255);
 	run("Clear Outside");
 	run("Select None");
 	
-	/*
-	selectWindow("CytoMaxima");
-	run("Find Maxima...", "noise=10 output=[Point Selection] light");
-	setTool("multipoint");
-	run("Point Tool...", "selection=Cyto cross=White marker=Small");
-	selectWindow("CytoMask");
-	run("Restore Selection");
-	*/
+	selectImage("CytoMask");
+	run("Duplicate...", "ignore title=cytoEdges");
+	run("Find Edges");
 	
+	setBatchMode(true);
 	// Marker-controlled Watershed in Cyto image, using CytoMaxima as seeds and CytoMask as mask:
-	run("Marker-controlled Watershed", "input=Cyto marker=CytoMaxima mask=CytoMask binary calculate use");
+	run("Marker-controlled Watershed", "input=cytoEdges marker=CytoMaxima mask=CytoMask binary calculate use");
 	//run("Marker-controlled Watershed", "input=Cyto marker=CytoMaxima mask=CytoMask binary use");
-	selectWindow("Cyto-watershed");
+	selectWindow("cytoEdges-watershed");
 	//run("Set Scale...", "distance=0 known=0 pixel=1 unit=pixel");	//remove scale
 	run("8-bit");
 	setThreshold(1, 255);
 	run("Convert to Mask");
 	run("Analyze Particles...", "size=0-Inf show=Masks display clear add in_situ");
-	roiManager("Save", output+File.separator+"ROI_centrioles.zip");
+	roiManager("Save", OutDir+File.separator+MyTitle_short+"_ROI_centrioles.zip");
 	
-	selectWindow("Cyto-watershed");
-	close();
-	selectWindow("CytoMaxima");
-	close();
-	selectWindow("CytoMask");
-	close();
+	close("cytoEdges*");
+	close("CytoMaxima");
+	close("CytoMask");
+	
 	
 	// Measure intensities:
 	run("Clear Results");
@@ -405,10 +461,15 @@ function inmunofluor(output,InDir,name)
 		yc[i]=getResult("Y",i);
 	}
 	
+	print("Centriolos coordinates");
+	print("X");
+	Array.print(xc);
+	print("Y");
+	Array.print(yc);
+		
 	selectWindow("Cyto");
 	//close();
-	
-	
+		
 	// Associate each centriole to the closest nucleus:
 	AssocNucl=newArray(nCentrs);
 	Dist2nucl=newArray(nCentrs);
@@ -422,6 +483,8 @@ function inmunofluor(output,InDir,name)
 		Dist2nucl[i]=distVec[rankPos[0]]*pixelWidth;
 	}
 	
+	print("Centriolos Associated Nucleus");
+	Array.print(AssocNucl);
 	
 	// FILTER OUT CENTRIOLES TOO FAR FROM THE CLOSEST NUCLEUS:
 	flagFirst=true;
@@ -476,45 +539,51 @@ function inmunofluor(output,InDir,name)
 			roiManager("Delete");
 		}
 	}
-	roiManager("Save", output+File.separator+"ROI_centrioles.zip");
+	
+	roiManager("Save", OutDir+File.separator+MyTitle_short+"_ROI_centrioles.zip");
 	nCentrs = roiManager("count");
 	
-	
 	// RESULTS--
-	
 	run("Clear Results");
 	if(File.exists(output+File.separator+"QuantificationResults_IF_Centriolos.xls"))
 	{
-		
 		//if exists add and modify
 		open(output+File.separator+"QuantificationResults_IF_Centriolos.xls");
+		IJ.renameResults("Results");
 		centrCounter=newArray(nCells);	// counter of how many centrioles per cell
 		for(k=0;k<nCells;k++){
 			flagNoCentr=true;	
 			centrCounter[k]=0;
+			print("Cell "+k);
 			for(j=0;j<nCentrs;j++){
+				print("Centriolo "+(j+1)+" Associated Nuclei to " + AssocNucl[j]-1);
 				if(AssocNucl[j]-1==k) {
+					print("Centriolo "+(j+1)+" Associated Nuclei to " + AssocNucl[j]-1);
 					i=nResults;
-					setResult("Label", i, MyTitle); 
+					setResult("[Label]", i, MyTitle); 
 					setResult("# Cell", i, k+1); 
 					setResult("Nucl Equiv Radius ("+unit+")", i, Rn[k]);
-					setResult("# Assoc Centr", i, j+1);
+					setResult("# Assoc Centr", i, centrCounter[k]+1);
 					setResult("Dist. to Nucl center ("+unit+")", i, Dist2nucl[j]); 						
 					setResult("Area centr ("+unit+"^2)", i, Ac[j]);		
 					setResult("Accum Fluor", i, Iacc[j]);
 					flagNoCentr=false;	
-					centrCounter[k]=centrCounter[k]+1;			
+					centrCounter[k]=centrCounter[k]+1;		
+					print("Cell counter "+centrCounter[k]);
 				}		
 			}
 			if(flagNoCentr) {
 				i=nResults;
-				setResult("Label", i, MyTitle); 
+				setResult("[Label]", i, MyTitle); 
 				setResult("# Cell", i, k+1); 
 				setResult("Nucl Equiv Radius ("+unit+")", i, Rn[k]);
 			}
 					
 		}		
 		saveAs("Results", output+File.separator+"QuantificationResults_IF_Centriolos.xls");
+		
+		close("Results");
+		run("Clear Results");
 	
 		// GET NUMBER OF CELLS WITH EACH NUMBER OF CENTRIOLES:
 		//centrCounter=newArray(2,4,1,2,3,1,0,2,1,0,3);
@@ -529,8 +598,9 @@ function inmunofluor(output,InDir,name)
 		// Save these results in another Excel:
 		run("Clear Results");
 		open(output+File.separator+"SummaryCentriolesPerCell.xls");
+		IJ.renameResults("Results");
 		i=nResults;
-		setResult("Label", i, MyTitle); 
+		setResult("[Label]", i, MyTitle); 
 		for(j=0;j<numCentrs.length;j++){
 			setResult("Cells with "+j+" centrioles", i, numCentrs[j]); 
 		}
@@ -540,7 +610,6 @@ function inmunofluor(output,InDir,name)
 	
 	else
 	{
-		
 		centrCounter=newArray(nCells);	// counter of how many centrioles per cell
 		for(k=0;k<nCells;k++){
 			flagNoCentr=true;	
@@ -548,10 +617,10 @@ function inmunofluor(output,InDir,name)
 			for(j=0;j<nCentrs;j++){
 				if(AssocNucl[j]-1==k) {
 					i=nResults;
-					setResult("Label", i, MyTitle); 
+					setResult("[Label]", i, MyTitle); 
 					setResult("# Cell", i, k+1); 
 					setResult("Nucl Equiv Radius ("+unit+")", i, Rn[k]);
-					setResult("# Assoc Centr", i, j+1);
+					setResult("# Assoc Centr", i,centrCounter[k]+1);
 					setResult("Dist. to Nucl center ("+unit+")", i, Dist2nucl[j]); 						
 					setResult("Area centr ("+unit+"^2)", i, Ac[j]);		
 					setResult("Accum Fluor", i, Iacc[j]);
@@ -561,7 +630,7 @@ function inmunofluor(output,InDir,name)
 			}
 			if(flagNoCentr) {
 				i=nResults;
-				setResult("Label", i, MyTitle); 
+				setResult("[Label]", i, MyTitle); 
 				setResult("# Cell", i, k+1); 
 				setResult("Nucl Equiv Radius ("+unit+")", i, Rn[k]);
 			}
@@ -581,7 +650,7 @@ function inmunofluor(output,InDir,name)
 		
 		// Save these results in another Excel:
 		run("Clear Results");		
-		setResult("Label", 0, MyTitle); 
+		setResult("[Label]", 0, MyTitle); 
 		for(j=0;j<numCentrs.length;j++){
 			setResult("Cells with "+j+" centrioles", 0, numCentrs[j]); 
 		}
@@ -591,7 +660,6 @@ function inmunofluor(output,InDir,name)
 	
 	
 	// DRAW:
-	
 	selectWindow("merge");
 	close();
 	selectWindow("blue");
@@ -607,7 +675,7 @@ function inmunofluor(output,InDir,name)
 	rename("merge");
 	
 	roiManager("Reset");
-	roiManager("Open", output+File.separator+"ROI_nuclei.zip");
+	roiManager("Open", OutDir+File.separator+MyTitle_short+"_ROI_nuclei.zip");
 	selectWindow("merge");
 	run("Select None");
 	roiManager("Show All");
@@ -619,7 +687,7 @@ function inmunofluor(output,InDir,name)
 	run("Flatten");
 	
 	roiManager("Reset");
-	roiManager("Open", output+File.separator+"ROI_centrioles.zip");
+	roiManager("Open", OutDir+File.separator+MyTitle_short+"_ROI_centrioles.zip");
 	selectWindow("merge-1");
 	run("Select None");
 	roiManager("Show All");
@@ -628,18 +696,7 @@ function inmunofluor(output,InDir,name)
 	roiManager("Set Color", "red");
 	roiManager("Set Line Width", 1);
 	run("Flatten");
-	/*
-	run("Colors...", "foreground=red background=black selection=yellow"); 
-	setFont("Serif", 8, "antiliased");
-	//set the label font size.
-	for (i=0; i<nCentrs; i++) {
-		roiManager("Select", i);
-		getSelectionBounds(x, y, width, height);	
-		drawString(i, x, y);
-		//roiManager("Select", i);
-		//roiManager("Draw");
-	}
-	*/
+
 	wait(500);
 	saveAs("Tiff", OutDir+File.separator+MyTitle_short+"_analyzed.tif");	
 	wait(500);

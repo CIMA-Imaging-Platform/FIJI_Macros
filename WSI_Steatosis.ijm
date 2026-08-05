@@ -133,10 +133,7 @@ function macroInfo(){
     + "</html>");
    // + "<div class='image-column'><img src='file:"+globalPathToImages+"resultsTemplates//WSI_Steatosis/WSI_Steatosis_imTemplate.jpg'></div>"
 
-
 }
-
-
 
 // changelog September 2022
 var r = 0.502, thTissue = 210, thFat = 210,  minFatSize = 30, maxFatSize = 7000, fatRoundness = 0.7, textureFeature=1.3; // Scanner 20x 
@@ -147,10 +144,18 @@ macro "Steatosis Action Tool 1 - Cf00T2d15IT6d10m" {
 	
 	macroInfo();
 		
-    // Prompt user to select a file
-    name = File.openDialog("Select File");
-    // Print selected file name
-    print(name);
+	// if is open do nothing, if not open
+	if (isImageOpen()) {
+		name = getTitle();
+		name = File.nameWithoutExtension;
+		rename(name);
+		print("Image "+name+" is already open.");
+	} else {
+		run("Fresh Start");
+		run("Collect Garbage");
+		name=File.openDialog("Select File");
+		print("Processing "+name);
+	}
     
 	// Create a dialog box for parameter input
 	Dialog.create("Parameters");
@@ -253,15 +258,90 @@ function steatosis(output, InDir, name,r, thTissue, thFat, minFatSize, maxFatSiz
 	// - name: Name of the image file to be analyzed.
 	
 	
-    run("Close All");
-    if (InDir == "-") {
-        open(name);
-    } else {
-        if (isOpen(InDir + name)) {} else {
-            open(InDir + name);
-        } 
-    }
+
+
+function isImageOpen() {
+	/**
+	 * Checks if an image with the specified name is currently open in ImageJ.
+	 */
+
+	// Get the list of open image windows
+	openImages = getList("image.titles");
+	// Check if the specified image name is in the list of open images
+	// if empty
+	if (lengthOf(openImages) == 0) {
+		return false; // No images are open
+	} else {
+		return true; // Return true if the image is open, false otherwise
+	}
+}
 	
+function correctBackground(image) {
+	/**
+	 * Adjusts the background intensity of an image based on pixel intensity mode.
+	 * Supports global and tissue-specific correction modes.
+	 *
+	 * @param {string} image - Name of the image window to correct.
+	 * @returns {number} mode - The mode of pixel intensity used for adjustment.
+	 *
+	 * Modes:
+	 * - **Global Correction**: Calculates the mode for the entire image. If mode > 200, adjusts brightness by adding (255 - mode) to all pixels.
+	 * - **Tissue-Specific Correction**: Calculates the mode within a selected ROI. Adjustment logic for this mode is incomplete.
+	 *
+	 * Requirements:
+	 * - For tissue-specific correction, an ROI must be present in the ROI Manager.
+	 *
+	 * Note: Global correction is enabled by default.
+	 */
+
+	// Set to true for global background correction; false for tissue-specific correction.
+	globalMode = true;
+
+	if (globalMode) {
+		// Global background correction
+		run("Clear Results");
+		run("Set Measurements...", "area mean modal redirect=None decimal=2");
+		run("Select All");
+
+		// Get the mode of pixel intensity
+		mode = getValue("Mode");
+		print(mode);
+		
+
+		// Adjust brightness if mode exceeds threshold
+		if (mode > 225)  {
+			dif = 255 - mode;
+			selectWindow(image);
+			run("Add...", "value=" + dif);
+		}
+		// Clear measurement results
+		run("Clear Results");
+	} else {
+		// Tissue-specific background correction
+		run("Clear Results");
+		run("Set Measurements...", "area mean modal redirect=None decimal=2");
+
+		// Assume ROI is preloaded in the ROI Manager
+		selectWindow("a");
+		roiManager("select", 0);
+		run("Measure");
+
+		// Get the mode of pixel intensity within the ROI
+		mode = getResult("Mode", 0);
+
+		if (mode > 200) {
+			selectWindow(image);
+			dif = 255 - mode;
+			run("Select None");
+		}
+
+		// Clear measurement results
+		run("Clear Results");
+	}
+
+	return mode; // Return the measured mode
+}
+
 	
 	function filterTableColum(tableName, columnName, filterType, threshold)
 	{
@@ -333,10 +413,27 @@ function steatosis(output, InDir, name,r, thTissue, thFat, minFatSize, maxFatSiz
 		// Return the array of positive indices
 		return positiveRois;
 	}
-
+	
+ // if image is already open do nothing, if not open. use indir + name in case of batch mode, just name in case of single image mode
+	if (isImageOpen()) {
+		name = getTitle();
+		name = File.nameWithoutExtension;
+		rename(name);
+		print("Image "+name+" is already open.");
+	}else if (InDir == "-") {
+		//open(name);
+		run("Bio-Formats Importer", "open=["+name+"] autoscale color_mode=Composite rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT series_1");
+		print("Image "+name+" is already open.");
+	}else {
+		//open(InDir+name);
+		run("Bio-Formats Importer", "open=["+InDir+name+"] autoscale color_mode=Composite rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT series_1");
+		print("Processing "+name);
+	}
     // Reset ROI manager and clear previous results
     roiManager("Reset");
     run("Clear Results");
+	
+	setBatchMode("exit and display");
 
     // Get image title and output directory
     MyTitle = getTitle();
@@ -352,8 +449,35 @@ function steatosis(output, InDir, name,r, thTissue, thFat, minFatSize, maxFatSiz
     selectWindow("Log");
 
     // Set batch mode and color preferences
-    setBatchMode(true);
+    setBatchMode(false);
     run("Colors...", "foreground=white background=black selection=green");
+    
+    run("Select All");
+	showStatus("Detecting tumor...");
+	// check number of channels, if more than 1 convert to luminance
+	getDimensions(width, height, channels, slices, frames);
+	if (channels > 1) {
+		selectWindow(MyTitle);
+		run("Split Channels");
+		//apply correctBackground to each channel
+		for (c=1; c<=channels; c++) {
+			selectWindow("C"+c+"-"+	MyTitle);
+			modeBckg=correctBackground("C"+c+"-"+MyTitle);
+			run("Enhance Contrast", "saturated=0.35");
+			run("Apply LUT");
+
+		}
+		//merge channels again
+		run("Merge Channels...", "c1=[C1-"+MyTitle+"] c2=[C2-"+MyTitle+"] c3=[C3-"+MyTitle+"] create");
+		run("RGB Color");
+		// close result image and rename new one as rgbinal
+		selectWindow(MyTitle+" (RGB)");
+		close(MyTitle);
+		rename(MyTitle);
+	}
+	rename("rgb");
+	waitForUser;
+    
 
     // DETECT TISSUE
     print("- Segmenting Tissue...");
@@ -362,13 +486,13 @@ function steatosis(output, InDir, name,r, thTissue, thFat, minFatSize, maxFatSiz
     run("RGB to Luminance");
     rename("tissueMask");
     run("Threshold...");
-    //thTissue=210;
+    thTissue=210;
     setThreshold(0, thTissue);
     setOption("BlackBackground", false);
     run("Convert to Mask");
     run("Invert");
     run("Open");
-    //maxFatSize=6000;
+    maxFatSize=6000;
     run("Analyze Particles...", "size="+maxFatSize+"-Infinity show=Masks in_situ");
     run("Invert");
     run("Analyze Particles...", "size=100000-Infinity pixel show=Masks in_situ");
@@ -379,15 +503,14 @@ function steatosis(output, InDir, name,r, thTissue, thFat, minFatSize, maxFatSiz
 	//-- DETECT LIPID DEPOSITS
 	selectWindow(MyTitle);
 	run("Select None");
-	run("Duplicate...", "title=orig");
 
-	// LIPID MASK--> no signal regions (white) 
+// LIPID MASK--> no signal regions (white) 
 	print("- Segmenting Fat deposits ...");
-	selectWindow("orig");
+	selectWindow("rgb");
 	run("Select None");
 	run("Duplicate...", "title=fatMask");
 	run("8-bit");
-	//thFat=210;
+	thFat=210;
 	run("Threshold...");
 	setThreshold(thFat, 255);
 	setOption("BlackBackground", false);
@@ -396,8 +519,8 @@ function steatosis(output, InDir, name,r, thTissue, thFat, minFatSize, maxFatSiz
 	close("fatMask");
 	selectWindow("fatMask-Opening");
 	rename("fatMask");
-	//minFatSize=20;
-	//maxFatSize=6000;
+	minFatSize=20;
+	maxFatSize=6000;
 	run("Analyze Particles...", "size="+minFatSize+"-"+maxFatSize+" pixel show=Masks exclude in_situ");
 	roiManager("select", 0);
 	setBackgroundColor(255,255,255);
@@ -407,14 +530,12 @@ function steatosis(output, InDir, name,r, thTissue, thFat, minFatSize, maxFatSiz
 	Roi.setName("FatMask");
 	roiManager("add");	
 	run("Select None");
-	
-	
-	
+			
 	// FAT MASK BASED ON TEXTURE -->
 	//Test images present glucogen, same phenotype as steatosis with different morphology and texture.
 	
 	print("- Separate Fat deposits from  glucogen ...");
-	selectWindow("orig");
+	selectWindow("rgb");
 	run("Duplicate...", "title=fatMask-texture");
 	run("Select None");
 	run("8-bit");
@@ -422,13 +543,13 @@ function steatosis(output, InDir, name,r, thTissue, thFat, minFatSize, maxFatSiz
 	selectImage("fatMask-texture dx1 dy1 dz0");
 	run("Square");
 	//run("Threshold...");
-	//textureFeature=1.5;
+	textureFeature=1.5;
 	setThreshold(-0.2,textureFeature);
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
 	run("Morphological Filters", "operation=Opening element=Disk radius=1");
-	//minFatSize=20;
-	//maxFatSize=6000;
+	minFatSize=20;
+	maxFatSize=6000;
 	run("Analyze Particles...", "size="+minFatSize+"-"+maxFatSize+" pixel show=Masks exclude in_situ");
 	run("Dilate");
 	roiManager("select", 1);
@@ -556,7 +677,7 @@ function steatosis(output, InDir, name,r, thTissue, thFat, minFatSize, maxFatSiz
   	/* IN CASE MARKER CONTROLLED WATERSHED IS NEEDED
 	 * 
   	/* Seeds 
-	selectWindow("orig");
+	selectWindow("rgb");
 	run("8-bit");
 	run("Gaussian Blur...", "sigma=1");
 	run("From ROI Manager");

@@ -181,14 +181,14 @@ function browndetection(output,InDir,name)
 	run("Threshold...");
 	//setAutoThreshold("Huang");
 	//getThreshold(lower, upper);
-		//th_tissue=230;
+	//	th_tissue=220;
 	setThreshold(0, th_tissue);
 	run("Convert to Mask");
 	run("Median...", "radius=12");
 	run("Invert");
 	//run("Fill Holes");
 	run("Open");
-	//run("Analyze Particles...", "size=12000-Infinity pixel show=Masks in_situ");
+	run("Analyze Particles...", "size=2000-Infinity pixel show=Masks in_situ");
 	run("Analyze Particles...", "size="+vesselSize+"-Infinity pixel show=Masks in_situ");
 	run("Invert");
 	run("Analyze Particles...", "size=50000-Infinity pixel show=Masks in_situ");
@@ -211,12 +211,12 @@ function browndetection(output,InDir,name)
 	
 	run("Threshold...");
 	setAutoThreshold("Default");
-		//th_brown=160;
+	//	th_brown=160;
 	setThreshold(0, th_brown);
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
-	run("Median...", "radius=6");
-	run("Analyze Particles...", "size=50-Infinity show=Masks in_situ");
+	run("Median...", "radius=1");
+	run("Analyze Particles...", "size=10-Infinity show=Masks in_situ");
 	roiManager("Show None");
 	run("Create Selection");
 	flagNoBrown=false;
@@ -295,12 +295,12 @@ function browndetection(output,InDir,name)
 	roiManager("Show None");
 	roiManager("Select", 0);
 	roiManager("Set Color", "yellow");
-	roiManager("Set Line Width", 2);
+	roiManager("Set Line Width", 1);
 	run("Flatten");
 	roiManager("Show None");
 	roiManager("Select", 1);
 	roiManager("Set Color", "green");
-	roiManager("Set Line Width", 2);
+	roiManager("Set Line Width", 1);
 	run("Flatten");
 	saveAs("Jpeg", OutDir+File.separator+MyTitle+"_analyzed.jpg");
 	rename(MyTitle_short+"_analyzed.jpg");

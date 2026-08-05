@@ -264,7 +264,7 @@ function siriusRed(output,InDir,name,r,th_tissue,redThreshold,corrType,workflowT
 	//MyTitle=getTitle();
 	selectWindow(MyTitle);
 	run("Select All");
-	run("Colour Deconvolution", "vectors=[User values] hide [r1]=0.09617791 [g1]=0.6905216 [b1]=0.7168889 [r2]=0.12630461 [g2]=0.2563811 [b2]=0.958288 [r3]=0.8249893 [g3]=0.5651483 [b3]=0.001");
+	run("Colour Deconvolution2", "vectors=[User values] hide [r1]=0.09617791 [g1]=0.6905216 [b1]=0.7168889 [r2]=0.12630461 [g2]=0.2563811 [b2]=0.958288 [r3]=0.8249893 [g3]=0.5651483 [b3]=0.001");
 	selectWindow(MyTitle+"-(Colour_2)");
 	close();
 	selectWindow(MyTitle+"-(Colour_3)");

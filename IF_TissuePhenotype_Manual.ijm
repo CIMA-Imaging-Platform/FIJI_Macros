@@ -1,32 +1,31 @@
 function macroInfo(){
 	
-// * Quantification of Tissue+MARKER Immunofluorescence Images  
-// * Target User: General
+// * Quantification of Marker1+MARKER Immunofluorescence Images  
+// * Target User: froi
 // *  
 
-	scripttitle= "Quantification of Tissue MARKER IF Images";
+	scripttitle= "Quantification of 2 MARKERS on IF Images";
 	version= "1.01";
 	date= "2025";
 	
 
 // *  Tests Images:
 
-	imageAdquisition="Epifluorescence/Confocal: 2 channel .tif images (Tissue + Marker).";
+	imageAdquisition="Epifluorescence/Confocal/VECTRA: 2 channel .jpg images .";
 	imageType="(24bit RGB)";  
 	voxelSize="Voxel size: user defined";
-	format="Format: .tif";   
+	format="Format: .jpg";   
  
  //*  GUI User Requierments:
  //*    - Interactive Threshold for Marker
- //*    - Automatic Tissue segmentation
+ //*    - Automatic Marker1 segmentation
  //*    - Single File and Batch Mode
  //*    
  // Important Parameters: 
-
-	 parameter3="Tissue Threshold (automatic)";
-	 parameter4="Marker Threshold (interactive)";
-	 parameter5="Min Nucleus Size (pixels)";
-	 parameter6="Min Marker Size (pixels)";
+	 parameter1="Channel selection for R G B images: Introduce (0 for All channels), (1 for Red),(2 for Green), (3 for Blue)";
+	 parameter2="Marker1 Threshold (automatic)";
+	 parameter3="Marker2 Threshold (interactive)";
+	 parameter4="Min Marker Size (pixels)";
 	 
  //  2 Action tools:
 		
@@ -37,18 +36,19 @@ function macroInfo(){
 
 // Analyzed Images with ROIs
 
-	excel="IF_TissuePhenotype_Manual_Results.xls";
+	excel="IF_Marker1Phenotype_Manual_Results.xls";
 	
 	feature1="Label";
 	feature2="ROI Area (um2)";
-	feature3="Tissue Area (um2)";
-	feature4="Positive Area (um2)";
-	feature5="Ratio AMarker/ATissue (%)";
-    feature6="Mean Marker Signal (ROI)";      // <-- Added new parameter
-    feature7="Std Marker Signal (ROI)";       // <-- Added new parameter
-	
+	feature3="Marker1 Area (um2)";
+	feature4="Marker2 Positive Marker Area (um2)";
+	feature5="Ratio AreaMarker1/AreaMarker2";
+    feature6="Marker1 Mean Signal (ROI)";      // <-- Added new parameter
+    feature7="Marker1 Std  Signal (ROI)";       // <-- Added new parameter
+    feature8="Marker2 Mean Signal (ROI)";      // <-- Added new parameter
+    feature9="Marker2 Std  Signal (ROI)";       // <-- Added new parameter
 /*  	  
- *  version: 2.00 
+ *  version: 1.00 
  *  Author: Adapted by Tomas Muñoz 2025 
  *  
  */
@@ -84,11 +84,11 @@ function macroInfo(){
 		+"<h2><font size=3 color=black>Developed for</h2>"
 		+"<ul><font size=2><li>"+imageAdquisition+"</li><li>"+imageType+"</li><li>"+voxelSize+"</li><li>"+format+"</li></ul>"
 		+"<ol><font size=2><li>"+buttom1+"</li><li>"+buttom2+"</li></ol>"
-		+"<ul><font size=2><li>"+parameter3+"</li><li>"+parameter4+"</li><li>"+parameter5+"</li><li>"+parameter6+"</li></ul>"
+		+"<ul><font size=2><li>"+parameter1+"</li><li>"+parameter2+"</li><li>"+parameter3+"</li><li>"+parameter4+"</li></ul>"
 		+"<p><font size=3>Quantification Results: </font></p>"
 		+"<p><font size=3>AnalyzedImages folder: Visualize Segmented Images</font></p>"
 		+"<p><font size=3>Excel "+excel+"</font></p>"
-		+"<ul><font size=2><li>"+feature1+"</li><li>"+feature2+"</li><li>"+feature3+"</li><li>"+feature4+"</li><li>"+feature5+"</li><li>"+feature6+"</li><li>"+feature7+"</li></ul>"
+		+"<ul><font size=2><li>"+feature1+"</li><li>"+feature2+"</li><li>"+feature3+"</li><li>"+feature4+"</li><li>"+feature5+"</li><li>"+feature6+"</li><li>"+feature7+"</li><li>"+feature8+"</li><li>"+feature9+"</li></ul>"
 		+"");
 }
 
@@ -99,14 +99,16 @@ function macroInfo(){
 
 // Define default parameters
 var r = 0.502;
-var thTissue  = 200;
+var Marker1Ch = 1;
+var marker2Ch = 2;
+var thMarker1  = 200;
 var markerThreshold = 80;
 var minSize=20;
 var corrType = "Global correction";
 var export = true;
 
 // Macro for processing a single file
-macro "IF_TissuePhenotype_Manual Action Tool 1 - Cf00T2d15IT6d10m" {
+macro "IF_Marker1Phenotype_Manual Action Tool 1 - Cf00T2d15IT6d10m" {
 	
 	close("*");
 	
@@ -120,31 +122,36 @@ macro "IF_TissuePhenotype_Manual Action Tool 1 - Cf00T2d15IT6d10m" {
 	Dialog.create("Parameters");
 	Dialog.addMessage("Choose parameters");
 	Dialog.addNumber("micra/px ratio", r);
-	Dialog.addNumber("Tissue  threshold", thTissue );
-	Dialog.addMessage("Marker Phenotype Detection parameters");
-	Dialog.addNumber("Marker  Min Size ", minSize);
+	Dialog.addMessage("Channel selection for R G B images: Introduce (0 for All channels), (1 for Red),(2 for Green), (3 for Blue)");
+	Dialog.addNumber("Introduce Marker1 Channel", Marker1Ch);
+	Dialog.addNumber("Introduce Marke2 Channel", marker2Ch);
+	//Dialog.addNumber("Marker1  threshold", thMarker1 );
+	Dialog.addMessage("Marker2 Phenotype Detection parameters");
+	Dialog.addNumber("Marker2  Min Size ", minSize);
 	//Dialog.addNumber(" threshold", markerThreshold);
-	//modeArray = newArray("Global correction", "Tissue  correction");
+	//modeArray = newArray("Global correction", "Marker1  correction");
 	//Dialog.addRadioButtonGroup("Choose background compensation for Marker  ", modeArray, 1, 2, "Global correction");
 	Dialog.addCheckbox("Export analyzed image", export); 
 	Dialog.show();
 	
 	// Get parameter values from dialog
 	r = Dialog.getNumber();
-	thTissue  = Dialog.getNumber();
+	Marker1Ch = Dialog.getNumber();
+	marker2Ch = Dialog.getNumber();
+	//thMarker1  = Dialog.getNumber();
 	minSize=Dialog.getNumber();
 	//markerThreshold = Dialog.getNumber();
 	//corrType = Dialog.getRadioButton();
 	export = Dialog.getCheckbox();
 	
 	// Perform Marker Phenotypedetection
-	analyzeMarkerImage("-", "-", name, r, thTissue , markerThreshold,corrType, export,minSize);
+	analyzeMarkerImage("-", "-", name, r,Marker1Ch,marker2Ch,thMarker1,markerThreshold,corrType, export,minSize);
 	showMessage("Done!");
 }
 
 
 // Macro for batch processing of a directory
-macro "IF_TissuePhenotype_Manual Action Tool 2 - C00fT0b11DT9b09iTcb09r" {
+macro "IF_Marker1Phenotype_Manual Action Tool 2 - C00fT0b11DT9b09iTcb09r" {
 	
 	close("*");
 	
@@ -157,20 +164,25 @@ macro "IF_TissuePhenotype_Manual Action Tool 2 - C00fT0b11DT9b09iTcb09r" {
 	Dialog.create("Parameters");
 	Dialog.addMessage("Choose parameters");
 	Dialog.addNumber("micra/px ratio", r);
-	Dialog.addNumber("Tissue  threshold", thTissue );
-	Dialog.addMessage("Marker Phenotype Detection parameters");
-	Dialog.addNumber("Marker threshold", markerThreshold);
-	Dialog.addNumber("Marker Min Size ", minSize);
-	modeArray = newArray("Global correction", "Tissue  correction");
-	Dialog.addRadioButtonGroup("Choose background compensation for Marker  ", modeArray, 1, 2, "Tissue  correction");
+	Dialog.addMessage("Channel selection for R G B images: Introduce (0 for All channels), (1 for Red),(2 for Green), (3 for Blue)");
+	Dialog.addNumber("Introduce Marker1 Channel", Marker1Ch);
+	Dialog.addNumber("Introduce Marker2 Channel", marker2Ch);
+	//Dialog.addNumber("Marker1  threshold", thMarker1 );
+	Dialog.addMessage("Marker2 Phenotype Detection parameters");
+	Dialog.addNumber("Marker2  Min Size ", minSize);
+	//Dialog.addNumber(" threshold", markerThreshold);
+	//modeArray = newArray("Global correction", "Marker1  correction");
+	//Dialog.addRadioButtonGroup("Choose background compensation for Marker  ", modeArray, 1, 2, "Global correction");
 	Dialog.addCheckbox("Export analyzed image", export); 
 	Dialog.show();
 	
 	// Get parameter values from dialog
 	r = Dialog.getNumber();
-	thTissue  = Dialog.getNumber();
-	markerThreshold = Dialog.getNumber();
+	Marker1Ch = Dialog.getNumber();
+	marker2Ch = Dialog.getNumber();
+	//thMarker1  = Dialog.getNumber();
 	minSize=Dialog.getNumber();
+	//markerThreshold = Dialog.getNumber();
 	//corrType = Dialog.getRadioButton();
 	export = Dialog.getCheckbox();
 
@@ -180,14 +192,13 @@ macro "IF_TissuePhenotype_Manual Action Tool 2 - C00fT0b11DT9b09iTcb09r" {
 			// Analyze file
 			name = list[j];
 			print(name);
-			analyzeMarkerImage(InDir, InDir, list[j], r, thTissue , markerThreshold,corrType, export,minSize);
-		}
+			analyzeMarkerImage(InDir, InDir, list[j],r,Marker1Ch,marker2Ch,thMarker1,markerThreshold,corrType, export,minSize);
 	}
 	showMessage("Done!");
 }
 
 
-function analyzeMarkerImage(output,InDir,name,r,thTissue , markerThreshold,corrType,export,minSize)
+function analyzeMarkerImage(output,InDir,name,r,Marker1Ch,marker2Ch,thMarker1,markerThreshold,corrType, export,minSize)
 {
 	
 	// Performs Marker Phenotypedetection and analysis.
@@ -197,9 +208,9 @@ function analyzeMarkerImage(output,InDir,name,r,thTissue , markerThreshold,corrT
 	// - InDir: Input directory where the image is located.
 	// - name: Name of the image file.
 	// - r: Micra/pixel ratio.
-	// - thTissue : Tissue  threshold value.
+	// - thMarker1 : Marker1  threshold value.
 	// - markerThreshold:  threshold value for Marker Phenotypedetection.
-	// - corrType: Type of background compensation ("Global correction" or "Tissue  correction").
+	// - corrType: Type of background compensation ("Global correction" or "Marker1  correction").
 	// - export: Indicates whether to export analyzed images.
 	
 	
@@ -223,13 +234,13 @@ function analyzeMarkerImage(output,InDir,name,r,thTissue , markerThreshold,corrT
 	OutDir = output + File.separator + "AnalyzedImages";
 	File.makeDirectory(OutDir);
 	
-		
+	// Detecting background
+	run("Select All");
+	
 	// Retrieve image dimensions and set properties such as pixel width and height
 	getDimensions(width, height, channels, slices, frames);
 	run("Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=" + r + " pixel_height=+" + r + " voxel_depth=1.0000 frame=[0 sec] origin=0,0");
-	
-	// Detecting background
-	run("Select All");
+
 
 	Dialog.create("Region of Interest");
 	Dialog.addMessage("Choose ROI selection method:");
@@ -241,7 +252,7 @@ function analyzeMarkerImage(output,InDir,name,r,thTissue , markerThreshold,corrT
 	
 	setBatchMode(false);
 	
-	// Determine whether to apply global or Tissue -specific background correction
+	// Determine whether to apply global or Marker1 -specific background correction
 	if (corrType == "Global correction") {
 	    globalMode = true;
 	} else {
@@ -254,13 +265,10 @@ function analyzeMarkerImage(output,InDir,name,r,thTissue , markerThreshold,corrT
 	if (segMode == "Manual") {
 		
 		nextROI = true ; 
-
 		while (nextROI) {
 			
 			getROI(segMode,MyTitleShort,iteration);
-
 			processROI(iteration, MyTitleShort, MyTitleShort, output, r, segMode, markerThreshold, minSize, globalMode, export, OutDir);
-			
 			choice = getBoolean("Do you want to draw another ROI?");
 
 			if (!choice) {
@@ -268,14 +276,12 @@ function analyzeMarkerImage(output,InDir,name,r,thTissue , markerThreshold,corrT
 			}else{
 				iteration++;
 			}
-			
 		}
 	} else {
 			
 			getROI(segMode,MyTitleShort,iteration);
 			processROI(iteration, MyTitleShort, MyTitleShort, output, r, segMode, markerThreshold, minSize, globalMode, export, OutDir);
 	}
-
 
 	//deleteUnwantedROIs(MyTitle);
 }
@@ -314,13 +320,12 @@ function checkImageType(image) {
 function getROI(segMode,image,iteration) {
 
 		/*
-		 * Segments Tissue  regions in an image using either automatic or manual methods.
-		 * @param image      The input image to be processed for Tissue  segmentation. expects RGB image
+		 * Segments Marker1  regions in an image using either automatic or manual methods.
+		 * @param image      The input image to be processed for Marker1  segmentation. expects RGB image
 		 */
 		
 		selectWindow(image);
 		if (segMode == "Automatic") {
-			
 			run("Select All");
 			Roi.setName("ROI__1");
 			roiManager("Set Color", "yellow");
@@ -354,7 +359,7 @@ function processROI(iteration, orig, MyTitleShort, output, r, segMode, markerThr
 	* @param {string} MyTitleShort - Shortened title for output naming.
 	* @param {string} output - Output file or directory for results.
 	* @param {int} r - Current ROI index or identifier.
-	* @param {string} segMode - Segmentation mode to use for Tissue  detection.
+	* @param {string} segMode - Segmentation mode to use for Marker1  detection.
 	* @param {int} markerThreshold - Threshold value for Marker Phenotypedetection.
 	* @param {int} minSize - Minimum size for detected regions to be considered.
 	* @param {boolean} globalMode - Whether to use global background correction.
@@ -366,22 +371,19 @@ function processROI(iteration, orig, MyTitleShort, output, r, segMode, markerThr
 	Roi.getBounds(x, y, width, height);
 	pos = newArray(x, y);
 	//Array.print(pos);
-	run("Duplicate...", "title=roi");
-
-	segmentTissue(MyTitleShort, "roi", pos, iteration);
+	run("Duplicate...", "title=Marker1");
+	
+	// Extract marker channel 
+	segmentMarker1(MyTitleShort, "Marker1", pos, iteration,Marker1Ch,segMode);
 
 	// Extract marker channel 
-	markerIm = extractMarkerChannel("roi");
-
+	markerIm = extractmarker2Channel("Marker1",marker2Ch);
 	correctBackground(markerIm, globalMode);
-
-	segmentMarker(MyTitleShort, markerIm, segMode, pos, markerThreshold, iteration, minSize);
-
-	measureAndExportResults(MyTitleShort,markerIm, output, r, iteration);
-
+	segmentMarker2(MyTitleShort, markerIm, segMode, pos, markerThreshold, iteration, minSize);
+	measureAndExportResults(MyTitleShort,marker2Ch, output, r, iteration);
 	visualizationAndExport(export, OutDir, MyTitleShort);
 	
-	
+	close("Marker1*");
 	run("Clear Results");
 	roiManager("reset");
 		
@@ -389,45 +391,73 @@ function processROI(iteration, orig, MyTitleShort, output, r, segMode, markerThr
 }
 
 
-function segmentTissue(orig,roi,pos,iteration) {
+function segmentMarker1(orig,roi,pos,iteration,Marker1Ch,segMode) {
 	/*
-	 * Segments Tissue+ nuclei using the selected Tissue channel.
+	 * Segments Marker1+ nuclei using the selected Marker1 channel.
 	 * @param orig      The original image window name.
 	 * @param roi       The ROI window name.
 	 * @param pos       Position array for ROI placement.
 	 * @param iteration ROI index.
 	 */
  	imageType = checkImageType(roi);
+ 	
+ 	run("Duplicate...","ignore title=Marker1Mask");
 
-	if (imageType == "24-bit RGB"){
-		//run("Split Channels");
-		//run("Merge Channels...", "c1=["+roi+" (red)] c2=["+roi+" (green)] c3=["+roi+" (blue)] create");
+	if ((imageType == "24-bit RGB") && (Marker1Ch == 0)){
 		run("RGB to Luminance");
-	}else if (indexOf(imageType, "multichannel") != -1) {
-		// If the image is multichannel, split channels
-		run("RGB Color");
-		run("RGB to Luminance");		
+		close("Marker1Mask");
+		rename("Marker1Mask");
+		
+	}else if(((imageType == "24-bit RGB") && (Marker1Ch != 0))){
+		run("Split Channels");
+		selectWindow("Marker1Mask (red)");
+		rename("Marker1Mask-1");
+		selectWindow("Marker1Mask (green)");
+		rename("Marker1Mask-2");
+		selectWindow("Marker1Mask (blue)");
+		rename("Marker1Mask-3");
+		selectWindow("Marker1Mask-"+Marker1Ch);
+		rename("Marker1Mask");
+		close("Marker1Mask-*");
 	}
-
-	setAutoThreshold("Huang dark");
+	
+	if (segMode == "Automatic") {
+		// If segmentation mode is Automatic, use Otsu thresholding
+		//setAutoThreshold("Otsu dark");
+		setAutoThreshold("Huang dark");
+		getThreshold(lower, upper);
+		setThreshold(lower, upper);
+		
+	} else {
+		// Manual/interactive threshold selection
+		run("Threshold...");
+		waitForUser("Select Marker 1 Threshold");
+		getThreshold(lower, upper);
+		setThreshold(lower, upper);
+	}
+	
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
 	run("Median...", "radius=3");
 	run("Open");
-	run("Analyze Particles...", "size=50-Infinity pixel circularity=0.00-1.00 show=Masks clear in_situ");
-	selectWindow(roi);
-	selectWindow("luminance of "+roi);
+	run("Analyze Particles...", "size=500-Infinity pixel show=Masks clear in_situ");
+	selectWindow("Marker1");
+	selectWindow("Marker1Mask");
 	run("Restore Selection");
 	run("Clear Outside");
+	selectWindow("Marker1Mask");
 	run("Create Selection");
 	Roi.getBounds(x, y, width, height);
+	selectWindow("Marker1");
+	run("Restore Selection");
 	selectWindow(orig);
 	run("Restore Selection");
 	Roi.move(pos[0]+x, pos[1]+y);
-	Roi.setName("Tissue_"+iteration);
-	Roi.setStrokeColor("blue");
+	Roi.setName("Marker1_"+iteration);
+	Roi.setStrokeColor("red");
 	roiManager("Add");
-	close("luminance of "+roi);
+	
+
 }
 
 // Function to delete unwanted ROIs interactively
@@ -475,47 +505,50 @@ function deleteUnwantedROIs(MyTitle) {
 		showMessage("Selection deleted");
 		selectWindow(MyTitle);
 		deleteROIs = getBoolean("Do you want to Delete another unwanted Regions");
+		
 	} while (deleteROIs)
 }
 
 
 
-function extractMarkerChannel(roi) {
+function extractmarker2Channel(Marker1,marker2Ch) {
 	/*
 	 * Extracts the red channel from a multichannel (RGB or composite) image.
 	 * @param cropName  The name of the image window to extract from.
 	 * @return          The name of the extracted red channel image.
 	 */
-	selectWindow(roi);
+	selectWindow(Marker1);
 	
-	imageType = checkImageType(roi);
-	run("Duplicate...", "title=markerChannel");
+	imageType = checkImageType(Marker1);
+	run("Duplicate...", "ignore title=marker2Channel");
 	
 	if (imageType == "24-bit RGB"){
 		run("Split Channels");
-		close("markerChannel (blue)");
-		close("markerChannel (green)");
-		selectWindow("markerChannel (red)");
-		rename("markerChannel");
+		selectWindow("marker2Channel (red)");
+		rename("marker2Channel-1");
+		selectWindow("marker2Channel (green)");
+		rename("marker2Channel-2");
+		selectWindow("marker2Channel (blue)");
+		rename("marker2Channel-3");
+		selectWindow("marker2Channel-"+marker2Ch);
+		rename("marker2Channel");
+		close("marker2Channel-*");
 	}else if (indexOf(imageType, "multichannel") != -1) {
 		run("Split Channels");
 		// For split channels, ImageJ names them as "cropName (red)", "cropName (green)", etc.
-		close("C2-"+roi);
-		close("C3-"+roi);
-		selectWindow("C1-"+roi);
-		rename("markerChannel");
+		selectWindow("C"+marker2Ch+"-"+Marker1);
+		rename("marker2Channel");
+		close("C*");
 	} 
-	
-	return "markerChannel";
+ 		
+	return "marker2Channel";
 
-
-	
 }
 
 function correctBackground(image,globalMode) {
 
 		/*
-		* Corrects the background intensity of the current image, either globally or within a selected Tissue  region.
+		* Corrects the background intensity of the current image, either globally or within a selected Marker1  region.
 		*
 		* @param {boolean} globalMode - If true, applies global background correction to the entire image.
 		*                               If false, applies correction only to the region selected in the ROI Manager.
@@ -540,7 +573,7 @@ function correctBackground(image,globalMode) {
 			run("Clear Results");
 			close("Results");
 		} else {
-			// Apply Tissue -specific background correction
+			// Apply Marker1 -specific background correction
 			run("Clear Results");
 			run("Set Measurements...", "area mean modal redirect=None decimal=2");
 			roiManager("select", 0);
@@ -557,7 +590,7 @@ function correctBackground(image,globalMode) {
 }
 
 
-function segmentMarker(MyTitle,positiveIm,segMode,pos,markerThreshold,iteration,minSize) {
+function segmentMarker2(MyTitle,positiveIm,segMode,pos,markerThreshold,iteration,minSize) {
 	/*
 	 * Detects Marker  -positive regions in the current image window.
 	 * Allows user to interactively select threshold, then creates a mask and ROI.
@@ -577,9 +610,10 @@ function segmentMarker(MyTitle,positiveIm,segMode,pos,markerThreshold,iteration,
 				
 		// If segmentation mode is Automatic, use Otsu thresholding
 		
-		setAutoThreshold("Li dark");
+		setAutoThreshold("Otsu dark");
 		getThreshold(lower, upper);
 		setThreshold(lower, upper);
+		
 	} else {
 		// Manual/interactive threshold selection
 		run("Threshold...");
@@ -593,29 +627,28 @@ function segmentMarker(MyTitle,positiveIm,segMode,pos,markerThreshold,iteration,
 	run("Median...", "radius=1");
 	run("Analyze Particles...", "size="+minSize+"-Infinity pixel circularity=0.00-1.00 show=Masks clear in_situ");
 	
-	selectWindow("roi");
+	
+	selectWindow("Marker1");
 	selectWindow(positiveIm);
 	run("Restore Selection");
 	run("Clear Outside");
-	close("roi");
-	
+	selectWindow(positiveIm);
 	run("Create Selection");
 	Roi.getBounds(x, y, width, height);
 	selectWindow(MyTitle);
 	run("Restore Selection");
 	Roi.move(pos[0]+x, pos[1]+y);
-	Roi.setName("positive_"+(iteration));
-	Roi.setStrokeColor("red");
+	//Roi.move(4548+x, 2232+y);
+	Roi.setName("Marker2_"+(iteration));
+	Roi.setStrokeColor("green");
 	roiManager("Add");
-	
 	close(positiveIm);
-
 
 }
 
-function measureAndExportResults(MyTitle,markerIm, output, r, iteration) {
+function measureAndExportResults(MyTitle,marker2Ch, output, r, iteration) {
 	/*
-	* Measures Tissue  and positive areas from ROI Manager, calculates area ratios, and exports results to an Excel file.
+	* Measures Marker1  and positive areas from ROI Manager, calculates area ratios, and exports results to an Excel file.
 	*
 	* @param output   The directory path where the results file ("Total.xls") will be saved.
 	* @param MyTitle  The label/title to associate with the current measurement in the results.
@@ -623,16 +656,36 @@ function measureAndExportResults(MyTitle,markerIm, output, r, iteration) {
 	*/
 	
 	
-	// Measure Tissue  and positive areas
+	// Measure Marker1  and positive areas
 	run("Clear Results");
 	close("Results");
 	
 	selectWindow(MyTitle);
-	run("Duplicate...", "title=markerChannel ignore");
+	run("Duplicate...", "title=marker2Channel ignore");
 	run("Split Channels");
-	close("*blue*");
-	close("*green*");
-	rename("markerChannel");
+	// depending of marker2Ch value, the channel to analyze will be red , green o blue channel 
+	if (marker2Ch == 1){
+		selectWindow("marker2Channel (red)");
+		rename("markerChannel");
+		//close the rest of channels
+		close("marker2Channel*");
+	}else if (marker2Ch == 2){
+		selectWindow("marker2Channel (green)");
+		rename("markerChannel");
+		//close the rest of channels
+		close("marker2Channel*");
+	}else if (marker2Ch == 3){
+		selectWindow("marker2Channel (blue)");
+		rename("markerChannel");
+		//close the rest of channels
+		close("marker2Channel*");
+	}else if (marker2Ch == 0){
+		selectWindow("marker2Channel");	
+		rename("markerChannel");
+	}
+	
+
+	rename("marker2Channel");
 	run("Set Measurements...", "area mean standard redirect=None decimal=2");
 	run("Set Scale...", "distance=1 known="+r+" unit=µm");
 	 	 
@@ -640,18 +693,18 @@ function measureAndExportResults(MyTitle,markerIm, output, r, iteration) {
 	roiManager("Measure");
 	
 	roiArea = getResult("Area", 0);
-	Tm = getResult("Area", 1); // Tissue area in micra
+	Tm = getResult("Area", 1); // Marker1 area in micra
 	TmeanSignal = getResult("Mean", 1);
 	TstdSignal = getResult("StdDev", 1);
 	Pm = getResult("Area", 2); // Positive area in micra
 	PmeanSignal = getResult("Mean", 2);
 	PstdSignal = getResult("StdDev", 2);
 
-	close("markerChannel");
+	close("marker2Channel");
 	run("Clear Results");
 	close("Results");
 	
-	// Calculate ratio of positive to Tissue  area
+	// Calculate ratio of positive to Marker1  area
 	rP = Pm / Tm;
 
 	// Print results and save image
@@ -663,13 +716,13 @@ function measureAndExportResults(MyTitle,markerIm, output, r, iteration) {
 	i = nResults;
 	setResult("[Label]", i, MyTitle+"_ROI_"+(iteration)+"");
 	setResult("ROI Area (um2)", i, roiArea);
-	setResult("Tissue Area (um2)", i, Tm);
-	setResult("Tissue Marker mean Signal", i, TmeanSignal);
-	setResult("Tissue Marker std Signal", i, TstdSignal);
-	setResult("Positive Area (um2)", i, Pm);
-	setResult("Positive Marker mean Signal", i, PmeanSignal);
-	setResult("Positive Marker std Signal", i, PstdSignal);
-	setResult("Ratio AMarker/ATissue (%)", i, rP);
+	setResult("Marker1 Area (um2)", i, Tm);
+	setResult("Marker1 mean Signal", i, TmeanSignal);
+	setResult("Marker1 std Signal", i, TstdSignal);
+	setResult("Marker2 Positive Area (um2)", i, Pm);
+	setResult("Marker2 Positive Marker mean Signal", i, PmeanSignal);
+	setResult("Marker2 Positive Marker std Signal", i, PstdSignal);
+	setResult("Ratio AMarker2/AMarker1", i, rP);
 	saveAs("Results", resultsFile);
 	
 	

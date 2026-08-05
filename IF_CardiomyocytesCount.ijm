@@ -96,8 +96,7 @@ var info=fileInfo(File.name);
 var OutDir=info[0];
 var MyTitle=info[1];
 var MyTitle_short=info[2];
-
-var ID=getImageID();
+var ID=getImageID();
 
 
 var r=0.50; //Elvectra 0.5um pixel --> 20x
@@ -313,8 +312,6 @@ macro "Aglutinina Action Tool 4 - Cf00T4d14F"{
 	
 	Array.getStatistics(cellsArea, minSize, maxSize, meanSize, stdSize);
 	
-	
-
 	selectWindow(MyTitle_short+"cardiomyocytes.tif");
 	close("\\Others");
 	
@@ -432,7 +429,7 @@ function selectRoi(MyTitle) {
 	run("8-bit");
 	run("Green");
 	run("Set Scale...", "distance=0 known=0 unit=pixel");	// Remove scale
-	run("Enhance Contrast...", "saturated=0.4");
+	run("Enhance Contrast...", "saturated=0.04");
 	setBatchMode("show");
 	
 	setBatchMode(false);
@@ -485,22 +482,25 @@ function cellSegmentation(membrane,nucleus,tissueThrhld,AglutininaThd,prominence
 	 */
 	
 	selectWindow(membrane); 
-	run("Colors...", "foreground=white background=black selection=green"); 
+	run("Colors...", "foreground=black background=white selection=green"); 
+	run("Options...", "iterations=1 count=1 do=Nothing");
+	
 
 	// Tissue Area Segmentation
 	setBatchMode(true); 
 	run("Duplicate...", "title=tissue"); 
 	run("8-bit"); 
-	run("Enhance Contrast...", "saturated=0.1"); 
+	run("Enhance Contrast...", "saturated=0.01"); 
 	run("Threshold..."); 
 	setThreshold(tissueThrhld, 255); 
-	setOption("BlackBackground", true); 
+	setOption("BlackBackground", false); 
 	run("Convert to Mask"); 
 	close("Threshold"); 
 	run("Analyze Particles...", "size=20000-Infinity show=Masks in_situ"); 
 	run("Median...", "radius=3"); 
 	run("Create Selection"); 
-	Roi.setStrokeColor("yellow"); 
+	Roi.setStrokeColor("yellow");
+	Roi.setName("tissue");
 	run("Add to Manager"); 
 	roiManager("Show None"); 
 	run("Select None"); 
@@ -524,7 +524,7 @@ function cellSegmentation(membrane,nucleus,tissueThrhld,AglutininaThd,prominence
 	run("Invert"); 
 	run("Analyze Particles...", "size=100-Infinity show=Masks in_situ"); 
 	roiManager("Select", 0); 
-	run("Enlarge...", "enlarge=-3"); 
+	run("Enlarge...", "enlarge=-10"); 
 	run("Clear Outside"); 
 	roiManager("Select", 0); 
 	roiManager("Delete");	

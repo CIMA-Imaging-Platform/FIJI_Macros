@@ -1,6 +1,6 @@
 
 
-macro "Foci_integrated Action Tool 1- Cf00T4d15Fio" 
+macro "IF3D_Centriolos Action Tool 1- Cf00T4d15Fio" 
 {
 
 	roiManager("Reset");
@@ -17,7 +17,6 @@ macro "Foci_integrated Action Tool 1- Cf00T4d15Fio"
 	Stack.setChannel(2);
 	run("Blue");
 
-
 	// Create stack with only the red channel and cropped to selection:
 	run("Duplicate...", "title=red duplicate channels=1 slices=1-"+slices);
 	run("Add to Manager");
@@ -26,8 +25,6 @@ macro "Foci_integrated Action Tool 1- Cf00T4d15Fio"
 
 	run("Subtract Background...", "rolling=20 stack");
 
-	
-	
 	// MEASURE INTENSITIES--
 	
 	selectWindow("red");
@@ -57,8 +54,6 @@ macro "Foci_integrated Action Tool 1- Cf00T4d15Fio"
 	}
 	Iavg_tot = Iavg_tot/slices;
 
-
-	
 	// CALCULATE FOCI--
 	
 	//MyTitle=getTitle();

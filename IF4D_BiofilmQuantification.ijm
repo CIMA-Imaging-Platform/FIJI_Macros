@@ -1,15 +1,15 @@
 function macroInfo(){
 	
 // * Title  
-	scripttitle =  "Quantification of Live Dead Bacteria";
+	scripttitle =  "Volumetric Analysis of TIME Series - 3D Bacteria Biofilm";
 	version =  "1.02";
 	date =  "2023";
 	
 
 // *  Tests Images:
 
-	imageAdquisition = "IF Confocal 2 Channel  ";
-	imageType = "4D - 8 bit";  
+	imageAdquisition = "IF Confocal 1 Channel  ";
+	imageType = "3D + TIME - 8 bit";  
 	voxelSize = "Voxel size:  unknown";
 	format = "Format: czi";   
  
@@ -118,7 +118,7 @@ macro "BiofilmQuantification3D Action Tool 1 - Cf00T2d15IT6d10m"{
 		
 	Dialog.create("PARAMETERS");
 	Dialog.addMessage("SELECT WORKFLOW");
-	workflowOptions=newArray("Time Series Analysis - FirstLayer","Time Series Analysis - Volumetric");
+	workflowOptions=newArray("Time Series Analysis - FirstLayer ","Time Series Analysis - Volumetric");
 	Dialog.addRadioButtonGroup("", workflowOptions, 1, 2, "FirstLayer Analysis Through Time");
 	Dialog.show();	
 	
@@ -128,13 +128,14 @@ macro "BiofilmQuantification3D Action Tool 1 - Cf00T2d15IT6d10m"{
 	name=File.openDialog("Select File");
 	//print(name);
 	print("Processing "+name);
-		
+	
+	
 	//setBatchMode(true);
 	
-	if (workflowType == "Time Series Analysis - FirstLayer"){
+	if (workflowType == "FirstLayer Analysis Through Time"){
 		biofilm2dTime("-","-",name,thBac,minBacSize);
 	}
-	if (workflowType == "Time Series Analysis - Volumetric"){
+	if (workflowType == "Volumetric Analyis Through Time"){
 		biofilm4d("-","-",name,thBac,minBacSize);
 	}
 	setBatchMode(false);
@@ -149,15 +150,14 @@ macro "BiofilmQuantification3D Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 	InDir=getDirectory("Choose Tiles' directory");
 	list=getFileList(InDir);
 	L=lengthOf(list);
-
-	Dialog.create("Parameters for the analysis");
-	Dialog.addNumber("Threshold for bacteria", thBac);	
-	Dialog.addNumber("Min bacteria size (px)", minBacSize);	
+		
+	Dialog.create("PARAMETERS");
+	Dialog.addMessage("SELECT WORKFLOW");
+	workflowOptions=newArray("Time Series Analysis - FirstLayer ","Time Series Analysis - Volumetric");
+	Dialog.addRadioButtonGroup("", workflowOptions, 1, 2, "FirstLayer Analysis Through Time");
 	Dialog.show();	
-	//cBiofilm =  Dialog.getNumber();
-	//cMarker1 =  Dialog.getNumber();
-	thBac= Dialog.getNumber();
-	minBacSize= Dialog.getNumber();
+	
+	workflowType= Dialog.getRadioButton();
 
 	for (j=0; j<L; j++)
 	{
@@ -168,6 +168,14 @@ macro "BiofilmQuantification3D Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
 			print("Processing "+name);
 			//setBatchMode(true);
 			biofilm2dTime(InDir,InDir,list[j],thBac,minBacSize);
+			
+			if (workflowType == "FirstLayer Analysis Through Time"){
+				biofilm2dTime(InDir,InDir,list[j],thBac,minBacSize);
+			}
+			if (workflowType == "Volumetric Analyis Through Time"){
+				biofilm4d(InDir,InDir,list[j],thBac,minBacSize);
+			}
+						
 			//biofilm4d(InDir,InDir,list[j],thBac,minBacSize);
 			setBatchMode(false);
 			}
@@ -282,7 +290,6 @@ function  biofilm2dTime(output,InDir,name,thBac,minBacSize){
 	}	 
 	
     saveAs("Results", output + File.separator + "QuantificationResults_IF2dTime_BiofilmQuantification.xls");	
-	close("*");
     
    	//Clear unused memory
 	wait(500);
@@ -315,9 +322,9 @@ function biofilm4d(output,InDir,name,thBac,minBacSize)
 	File.makeDirectory(OutDir);
 	rename("orig");
 	
-	//cropOutOfFocus("orig");
+	cropOutOfFocus("orig");
 
-	//selectWindow("inFocus");
+	selectWindow("inFocus");
 	run("Duplicate...", "title=imageToSave duplicate ");
 
 	setBatchMode(true);
@@ -327,7 +334,7 @@ function biofilm4d(output,InDir,name,thBac,minBacSize)
 	run("Set Measurements...", "area mean redirect=None decimal=2");
 	
 	//--PROCESS Biofilms
-	//selectWindow("inFocus");
+	selectWindow("inFocus");
 	Stack.getDimensions(width, height, channels, slices, FRAMES);
 	getVoxelSize(vx, vy, vz, unit);
 
@@ -336,8 +343,7 @@ function biofilm4d(output,InDir,name,thBac,minBacSize)
 	for (i = 1; i <=FRAMES; i++){
 	    
 	    print("Processing frame: " + i);
-	   //  selectWindow("inFocus");
-	    i=1;
+	    selectWindow("inFocus");
 	    run("Duplicate...", "duplicate title=singleFrameBiofilm frames="+i);
 	    run("Subtract Background...", "rolling=50 stack");
 	   // print(i);
@@ -351,7 +357,7 @@ function biofilm4d(output,InDir,name,thBac,minBacSize)
 	    
 	    // Post-processing to clean up segmentation
 	    run("Median...", "radius=1 stack");
-	    minBacSize = 50;
+	    //minBacSize = 50;
 	    run("Analyze Particles...", "size=" + minBacSize + "-Infinity pixel show=Masks in_situ stack");
 	    run("Clear Results");
 	    

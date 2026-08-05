@@ -121,8 +121,10 @@ macro "All_exploreFeatures Action Tool 1 - Sa3fT0b10CT8b10PTfb10LTfb10I"{
 		        min = getValue("Min");
 		        max = getValue("Max");
        		} 
-	  
-	        setAutoThreshold("Otsu dark stack");
+	 		 
+	 		setSlice(floor(slices/2));      
+	        setAutoThreshold("Otsu dark");
+			//run("Threshold...");
 	        getThreshold(otsuTh, upper);
 	      	
     		setSlice(floor(slices/2));      
@@ -178,7 +180,7 @@ macro "All_exploreFeatures Action Tool 1 - Sa3fT0b10CT8b10PTfb10LTfb10I"{
 	run("Clear Results");
 	
 	// Save all collected data to XLS
-	selectWindow("fetures");
+	selectWindow("features");
 	IJ.renameResults("Results");	
 	saveAs("Results", outputFile);
 	print("Saved to: " + outputFile);

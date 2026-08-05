@@ -30,7 +30,7 @@ function macroInfo(){
 
     // OUTPUT
 
-    excel = "InfectionResults.xls";
+    excel = "IF4D_ColocLiveInfectionResults.xls";
 
     feature1  = "Filename";
     feature2  = "t (min)";
@@ -91,13 +91,14 @@ macro "Coloc Coloc Live infection quantification Action Tool 1 - Cf00T2d15IT6d10
     Dialog.addNumber("Time interval between frames (min)", 0.5);
 
     Dialog.addMessage("Lysosome Parameters");
-    Dialog.addNumber("Lysosome threshold value:", 5);
-    Dialog.addNumber("Min area (pixel2):", 200);
+    Dialog.addNumber("Lysosome threshold value:", 20);
+    Dialog.addNumber("Min area (pixel2):", 5);
 
     Dialog.addMessage("NP-GFP Parameters");
     Dialog.addNumber("NP-GFP threshold value:", 10);
-    Dialog.addNumber("Min area (pixel2):", 20);
-
+    Dialog.addNumber("Min area (pixel2):", 5);
+    
+	Dialog.addCheckbox("Batchmode?", true);
     Dialog.show();
 
     cLyso = Dialog.getNumber();
@@ -107,7 +108,7 @@ macro "Coloc Coloc Live infection quantification Action Tool 1 - Cf00T2d15IT6d10
     aLyso_th = Dialog.getNumber();
     NPTh = Dialog.getNumber();
     aNP_th = Dialog.getNumber();
-
+    var batchmode = Dialog.getCheckbox();
     // Prepare output directory
     conditions = "LysoT"+LysoTh+"A"+aLyso_th+"_NPT"+NPTh+"A"+aNP_th;
     outputDir = File.getParent(name) + File.separator + conditions + File.separator;
@@ -134,7 +135,6 @@ macro "Coloc Coloc Live infection quantification Action Tool 2 - C00fT0b11DT9b09
 	//Description
 	macroInfo();
 
-	
 	setOption("ExpandableArrays", true);
 	
 	inputDir =getDirectory("Opendirectory");
@@ -185,16 +185,12 @@ macro "Coloc Coloc Live infection quantification Action Tool 2 - C00fT0b11DT9b09
 	//P570Th= Dialog.getNumber();
 	//aP570_th = Dialog.getNumber();
 	//int_d = Dialog.getNumber();
-	batchmode = Dialog.getCheckbox();
+	var batchmode = Dialog.getCheckbox();
 
 	conditions = "LysoT"+LysoTh+"A"+aLyso_th+"_NPT"+NPTh+"A"+aNP_th; //+"_P570T"+P570Th+"A"+aP570_th
 	outputDir = inputDir + File.separator + conditions + File.separator;		
 	File.makeDirectory(outputDir);
-	
-	//Batchmode
-	setBatchMode(batchmode);
-	close("*");
-	roiManager("reset");	
+
 	
 	setOption("ExpandableArrays", true);
 	filename =  newArray;
@@ -210,29 +206,13 @@ macro "Coloc Coloc Live infection quantification Action Tool 2 - C00fT0b11DT9b09
 	// P570_int_total = newArray;	
 
 	for (j = 0; j < fileList.length; j++) {
-		if (endsWith(fileList[j], ".tif")) {
+		if (endsWith(fileList[j], ".tif") || endsWith(fileList[j], ".czi")) {
 			file = inputDir + fileList[j];
 			// Use the new function for processing
 			processSingleFile(file, cLyso, cNP, t_int, LysoTh, aLyso_th, NPTh, aNP_th, outputDir, filename, t, aLyso, aNP, aNPLyso);
 		}
 	}
 	 		
-	//Save results
-	for (i = 0; i <filename.length; i++) {			
-		setResult("Filename", i, filename[i]);
-		setResult("t(min)", i, t[i]);
-		setResult("Total_lysosome_area", i, aLyso[i]);
-		setResult("Total_NP_area", i, aNP[i]);
-		//setResult("Total_P570_area", i, aP570[i]);
-		setResult("Infected_NP_area", i, aNPLyso[i]);
-		//setResult("Infected_P570_area", i, aP570Lyso[i]);
-		//setResult("NP->P570_interactions", i, NP_int_N[i]);	
-		//setResult("P570->NP_interactions", i, NP_int_N[i]);
-		//setResult("NP_int_site", i, NP_int_total[i]);
-		//setResult("P570_int_site", i, P570_int_total[i]);			
-	}
-
-	saveAs("Results", outputDir + "InfectionResults.xls");
 
 	close("*");	
 	 		
@@ -266,52 +246,132 @@ function processSingleFile(name, cLyso, cNP, t_int, LysoTh, aLyso_th, NPTh, aNP_
     rename(file);
     print("Analysing " + file);
     getDimensions(width, height, channels, slices, frames);
-
-    run("Duplicate...", "title=imageToSave duplicate");
+	run("Options...", "iterations=1 count=1 do=Nothing");
+		
+    run("Duplicate...", "title=orig duplicate");
     selectWindow(file);
     run("Split Channels");
     lyso = "C"+cLyso+"-" + file;
     NP = "C"+cNP+"-" + file;
-    
-    setBatchMode(true);
-    
+   	   	     
     // Generate masks
     lyso = getMask(lyso, LysoTh, aLyso_th);
     NP = getMask(NP, NPTh, aNP_th);
     NP_Lyso = getInfected(lyso, NP);
-
-
+	
     m = 0;
+    filename = newArray();
+    volLyso = newArray();
+    meanILyso = newArray();
+    stdILyso = newArray();
+    maxILyso = newArray();
+    minILyso = newArray();
+    medianILyso = newArray();
+    modeILyso = newArray();
+    
+    volNP = newArray();
+    meanINP = newArray();
+    stdINP = newArray();
+    maxINP = newArray();
+    minINP = newArray();
+    medianINP = newArray();
+    modeINP = newArray();
+    
+    volColoc = newArray();
+    meanIColoc = newArray();
+    stdIColoc = newArray();
+    maxIColoc = newArray();
+    minIColoc = newArray();
+    medianIColoc = newArray();
+    modeIColoc = newArray();
+    
     for (i = 0; i < frames; i++) {
     	
     	print("Processing Frame " + (i+1));
         filename[m] = file;
         t[m] = t_int * i;
-        aLyso[m] = getVolume(lyso, i+1);
-        aNP[m] = getVolume(NP, i+1);
-        aNPLyso[m] = getVolume(NP_Lyso, i+1);
+        lysoFeatures = getImFeatures("orig",lyso,cLyso,i+1);
+        volLyso[m] = lysoFeatures[0];
+	    meanILyso[m] = lysoFeatures[1];
+	    stdILyso[m] = lysoFeatures[2];
+	    maxILyso[m] = lysoFeatures[3];
+	    minILyso[m] = lysoFeatures[4];
+	    medianILyso[m] = lysoFeatures[5];
+	    modeILyso[m] = lysoFeatures[6];
+	    
+        NPfeatures = getImFeatures("orig",NP,cNP, i+1);
+        volNP[m] = NPfeatures[0];
+	    meanINP[m] = NPfeatures[1];
+	    stdINP[m] = NPfeatures[2];
+	    maxINP[m] = NPfeatures[3];
+	    minINP[m] = NPfeatures[4];
+	    medianINP[m] = NPfeatures[5];
+	    modeINP[m] = NPfeatures[6];
+	            
+        NPLysofeatures = getImFeatures("orig",NP_Lyso,cLyso, i+1);
+        volColoc[m] = NPLysofeatures[0];
+	    meanIColoc[m] = NPLysofeatures[1];
+	    stdIColoc[m] = NPLysofeatures[2];
+	    maxIColoc[m] = NPLysofeatures[3];
+	    minIColoc[m] = NPLysofeatures[4];
+	    medianIColoc[m] = NPLysofeatures[5];
+	    modeIColoc[m] = NPLysofeatures[6];
+	    
         m++;
-        addOverlay4D("imageToSave", lyso, cLyso, "red", i+1);
-        addOverlay4D("imageToSave", NP, cNP, "green", i+1);
-        addOverlay4D("imageToSave", NP_Lyso, cLyso, "yellow", i+1);
-        addOverlay4D("imageToSave", NP_Lyso, cNP, "yellow", i+1);
+        selectWindow("orig");
+        addOverlay4D("orig", lyso, cLyso, "red", i+1);
+        selectWindow("orig");
+        addOverlay4D("orig", NP, cNP, "green", i+1);
+        selectWindow("orig");
+        addOverlay4D("orig", NP_Lyso, cLyso, "yellow", i+1);
      }
     setBatchMode("exit and display");
 
-    saveImages("imageToSave", outputDir, file);
+    saveImages("orig", outputDir, file);
     close("*");
     run("Clear Results");
     close("Results");
 
+
+	if (File.exists(outputDir + "IF4D_ColocLiveInfectionResults.xls")){
+	
+		open(outputDir + "IF4D_ColocLiveInfectionResults.xls");
+		IJ.renameResults("Results");
+	}
+	
+	pos = nResults;
+		
     // Save results
     for (i = 0; i < t.length; i++) {
-        setResult("Filename", i, filename[i]);
-        setResult("t(min)", i, t[i]);
-        setResult("Total_lysosome_area", i, aLyso[i]);
-        setResult("Total_NP_area", i, aNP[i]);
-        setResult("Infected_NP_area", i, aNPLyso[i]);
+        setResult("Filename",pos+ i, filename[i]);
+        setResult("t(min)",pos+i, t[i]);
+        setResult("Total_lysosome_vol",pos+i, volLyso[i]);
+        setResult("Lysosome_Avg_Intensity",pos+i, meanILyso[i]);
+        setResult("Lysosome_Std_Intensity",pos+i, stdILyso[i]);
+        setResult("Lysosome_Max_Intensity",pos+i, maxILyso[i]);
+        setResult("Lysosome_Min_Intensity",pos+i, minILyso[i]);
+        setResult("Lysosome_Median_Intensity",pos+i, medianILyso[i]);
+        setResult("Lysosome_Mode_Intensity",pos+i, modeILyso[i]);
+        
+        setResult("Total_NP_vol",pos+i, volNP[i]);
+        setResult("NP_Avg_Intensity",pos+i, meanINP[i]);
+        setResult("NP_Std_Intensity",pos+i, stdINP[i]);
+        setResult("NP_Max_Intensity",pos+i, maxINP[i]);
+        setResult("NP_Min_Intensity",pos+i, minINP[i]);
+        setResult("NP_Median_Intensity",pos+i, medianINP[i]);
+        setResult("NP_Mode_Intensity",pos+i, modeINP[i]);
+        
+        
+        setResult("ColocLysosomeNP_vol",pos+i, volColoc[i]);
+        setResult("ColocLysosomeNP_Avg_Intensity",pos+i, meanIColoc[i]);
+        setResult("ColocLysosomeNP_Std_Intensity",pos+i, stdIColoc[i]);
+        setResult("ColocLysosomeNP_Max_Intensity",pos+i, maxIColoc[i]);
+        setResult("ColocLysosomeNP_Min_Intensity",pos+i, minIColoc[i]);
+        setResult("ColocLysosomeNP_Median_Intensity",pos+i, medianIColoc[i]);
+        setResult("ColocLysosomeNP_Mode_Intensity",pos+i, modeIColoc[i]);
+                
     }
-    saveAs("Results", outputDir + "InfectionResults.xls");
+    saveAs("Results", outputDir + "IF4D_ColocLiveInfectionResults.xls");
     close("Results");
     close("*");
 }
@@ -326,13 +386,23 @@ function getMask(img, th, minArea) {
     // * @param {minArea}  - Integer, minimum area (in pixels) for objects to keep.
     // * @return {mask}    - String, name of the mask image window.
     selectWindow(img);
-    run("Median...", "radius=1 stack");
-    run("Subtract Background...", "rolling=50 stack");
-    //setAutoThreshold("Otsu dark stack");
+
+	run("Median...", "radius=1 stack");
+    run("Subtract Background...", "rolling=20 stack");
+    	
+	getDimensions(width, height, channels, slices, frames);
+	Stack.getStatistics(area, mean, min, max, std, histogram);
+	setMinAndMax(min, max);	
+	run("Apply LUT","stack");
+	run("Gamma...", "value=0.75 stack");
+	run("Subtract Background...", "rolling=20 stack");
+    
+	
     setThreshold(th, 255, "raw");
+    //setAutoThreshold("Otsu dark stack no-reset");
     setOption("BlackBackground", false);
     run("Convert to Mask", "method=Otsu background=Dark");
-    run("Close-", "stack");
+
     //minArea=50;
     run("Analyze Particles...", "size="+minArea+"-Infinity pixel show=Masks stack in_situ");
     mask = "Mask_"+img;
@@ -374,7 +444,7 @@ function getArea(img, n) {
     return a;
 }
 
-function getVolume(lys, n){
+function getVolumeFeatures(lys, n){
     // This function calculates the 3D volume of segmented objects in a given frame using Analyze Regions 3D.
     // * @param {lys} - String, name of the mask image.
     // * @param {n}   - Integer, frame number to analyze.
@@ -393,6 +463,53 @@ function getVolume(lys, n){
     close("temp");
     return Vol; 
 }
+
+
+function getImFeatures(im,lys,channel, n){
+    // This function calculates the 3D volume of segmented objects in a given frame using Analyze Regions 3D.
+    // * @param {lys} - String, name of the intensity image.
+    // * @param {lys} - String, name of the mask image.
+    // * @param {n}   - Integer, frame number to analyze.
+    // * @return {Vol} - Float, measured volume.
+    
+    
+    selectWindow(im);
+    run("Select None");
+    run("Duplicate...", "title=tempInt duplicate channels="+channel+" frames="+n+"-"+n+"");
+   
+    selectWindow(lys);
+    run("Select None");
+    run("Duplicate...", "title=temp duplicate frames="+n+"-"+n+"");
+    
+    run("Intensity Measurements 2D/3D", "input=tempInt labels=temp mean stddev max min median mode volume");
+      
+   	selectWindow("tempInt-intensity-measurements");
+    IJ.renameResults("Results");
+    if (nResults > 0){
+	   Vol = getResult("Volume", 0);
+	   meanI = getResult("Mean", 0);
+	   stdI = getResult("StdDev", 0);
+	   maxI = getResult("Max", 0);
+	   minI = getResult("Min", 0);
+	   medianI = getResult("Median", 0);
+	   modeI = getResult("Mode", 0);
+    }else {
+       Vol = 0;
+	   meanI = 0;
+	   stdI = 0;
+	   maxI = 0;
+	   minI = 0;
+	   medianI = 0;
+	   modeI = 0;
+    }
+    
+    imFeatures = newArray(Vol,meanI,stdI,maxI,minI,medianI,modeI);
+    
+    run("Clear Results");
+    close("temp*");
+    return imFeatures; 
+}
+
 
 function getInteractions(infbac1, infbac2, int_d, n){
     // This function quantifies spatial interactions between two infected populations by enlarging ROIs and measuring overlaps.
@@ -471,8 +588,13 @@ function addOverlay4D(rawImage, maskImage, channel, color, frame){
     // * @param {channel}   - Integer, channel number for overlay.
     // * @param {color}     - String, color for overlay.
     // * @param {frame}     - Integer, frame number for overlay.
+    
+    //Batchmode
     selectWindow(rawImage);
     Stack.setFrame(frame);
+
+	setBatchMode(true);
+
     selectWindow(maskImage);
     Stack.setFrame(frame);
   

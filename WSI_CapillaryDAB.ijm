@@ -124,7 +124,7 @@ function macroInfo(){
 
 
 
-var r=0.502, thTissue=254, thBlue=180, thCap=220, minSizeUm=17.5, maxSizeUm=2000, maxLumenSizeUm=1250;		// Escáner 20x
+var r=0.502, thTissue=250, thBlue=180, thCap=220, minSizeUm=17.5, maxSizeUm=2000, maxLumenSizeUm=1250;		// Escáner 20x
 
 macro "CapillaryDAB Action Tool 1 - Cf00T0d12CT8d12aTfd12p"{
 	
@@ -211,11 +211,11 @@ macro "CapillaryDAB Action Tool 1 - Cf00T0d12CT8d12aTfd12p"{
 	rename("orig");
 	if(max>200) {
 		setMinAndMax(0, max);
-		run("Apply LUT");
 	}
 	run("Clear Results");
-	setBatchMode(false);
 	
+	setBatchMode("exit and display");
+		
 	
 	//--SELECT AREA OF ANALYSIS
 	
@@ -301,8 +301,7 @@ macro "CapillaryDAB Action Tool 1 - Cf00T0d12CT8d12aTfd12p"{
 	Atm=At*r*r;
 	run("Clear Results");
 	
-	
-	//setBatchMode(true);
+	setBatchMode(true);
 	
 	//--SEPARATE STAINING CHANNELS
 	
@@ -429,9 +428,9 @@ macro "CapillaryDAB Action Tool 1 - Cf00T0d12CT8d12aTfd12p"{
 	run("Restore Selection");
 	setTool("multipoint");
 	run("Point Tool...", "type=Hybrid color=Green size=Medium counter=0");
+	run("In [+]");run("In [+]");run("In [+]");run("In [+]");run("In [+]");
 	run("Flatten");
 	wait(200);
-	
 	saveAs("Jpeg", OutDir+File.separator+MyTitle_short+"_analyzed.jpg");
 	rename(MyTitle_short+"_analyzed.jpg");
 	
@@ -536,11 +535,13 @@ macro "CapillaryDAB Action Tool 2 - Cf00T0d10AT6d10rTad10eTfd10a"{
 	run("Merge Channels...", "c1=[orig (red)] c2=[orig (green)] c3=[orig (blue)]");
 	rename("orig");
 	if(max>200) {
+		//print(max);
 		setMinAndMax(0, max);
-		run("Apply LUT");
 	}
+	
 	run("Clear Results");
-	setBatchMode(false);
+	setBatchMode("exit and display");
+	
 	
 	
 	//--SELECT AREA OF ANALYSIS
@@ -586,7 +587,6 @@ macro "CapillaryDAB Action Tool 2 - Cf00T0d10AT6d10rTad10eTfd10a"{
 	roiManager("Deselect");
 	roiManager("Select", newArray(0,1));
 	roiManager("Delete");
-	
 	
 	//--POSSIBILITY OF DELETING TISSUE REGIONS
 	

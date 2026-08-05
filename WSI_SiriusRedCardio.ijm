@@ -7,7 +7,7 @@ function macroInfo(){
 
 	scripttitle= "Quantification of Sirius Red IHC WSImages";
 	version= "1.02";
-	date= "2023";
+	date= "2025";
 	
 
 // *  Tests Images:
@@ -50,13 +50,13 @@ function macroInfo(){
 /*  	  
  *  version: 1.02 
  *  Author: Mikel Ariz  
- *  Commented by: Tomas Muñoz 2023 
- *  Date : 2015
+ *  Commented by: Tomas Muñoz 2025 
+ *  Date : 2025
  *  
  */
 
 //	MIT License
-//	Copyright (c) 2023 Tomas Muñoz tmsantoro@unav.es
+//	Copyright (c) 2025 Tomas Muñoz tmsantoro@unav.es
 //	Permission is hereby granted, free of charge, to any person obtaining a copy
 //	of this software and associated documentation files (the "Software"), to deal
 //	in the Software without restriction, including without limitation the rights
@@ -118,7 +118,7 @@ var r = 0.502;
 var th_tissue = 200;
 var redThreshold = 80;
 var minSize=100;
-var globalMode = true;
+var globalMode = false;
 var export = true;
 
 call("ij.Prefs.set", "threshold.mode", "Over/Under");
@@ -211,7 +211,7 @@ macro "WSI_SiriusRed Action Tool 2 - C00fT0b11DT9b09iTcb09r" {
 
 */
 
-function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
+function sr(output,InDir,name,r,th_tissue, redThreshold,export,minSize)
 {
 	
 	// Performs Sirius Red detection and analysis.
@@ -226,7 +226,6 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 	// - corrType: Type of background compensation ("Global correction" or "Tissue correction").
 	// - export: Indicates whether to export analyzed images.
 	
-	close("*");
 	run("Collect Garbage");
 	
 	// Image Opening and Global Correction Mode Setting
@@ -274,8 +273,7 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 		run("Duplicate...", "title=orig");
 	}
 	close(MyTitle);
-	selectWindow("orig");
-	setBatchMode("show");
+	setBatchMode("exit and display");
 	
 	// Retrieve image dimensions and set properties such as pixel width and height
 	run("Properties...", "channels=1 slices=1 frames=1 unit=um pixel_width=" + r + " pixel_height=+" + r + " voxel_depth=1.0000 frame=[0 sec] origin=0,0");
@@ -285,7 +283,6 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 	
 	// If the user chooses to load previous ROIs
 	if (loadROIs) {
-		
 	    // Open the ROI set file
 	    roiManager("Open", OutDir + File.separator + MyTitle_short + "_RoiSet_Cardio.zip");
 	    // Select the first ROI and create a mask
@@ -295,9 +292,7 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 	    // Delete the selected ROI
 	    roiManager("select", 1);
 	    roiManager("delete");
-	    
 	} else {
-	    
 	    // If the user chooses to start a new segmentation
 	    
 	    // Detect background automatically or manually
@@ -314,9 +309,9 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 	        close();
 	        selectWindow("lum (green)");
 	        rename("tissueMask");
-	        	    	
+	        
 	        // Preprocess and segment background
-	        //setAutoThreshold("Huang");
+	        setAutoThreshold("Huang");
 	        setThreshold(0, th_tissue);
 	        setOption("BlackBackground", false);
 	        run("Convert to Mask");
@@ -339,7 +334,6 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 	        roiManager("Add");
 	        selectWindow("tissueMask");
 	        close();
-	        
 	    } else {
 	        // If manual segmentation is chosen
 	        
@@ -371,7 +365,10 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 	        run("Invert");
 	        roiManager("select", 0);
 	        run("Clear Outside");
-	        	        
+	        run("Create Selection");
+	        selectWindow("orig");
+	        run("Restore Selection");
+	        
 	        // Call the function to delete unwanted ROIs
 	        deleteROIsFun("tissueMask", "orig");
 	        
@@ -389,6 +386,8 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 
 	}
 
+
+
 	// Separate colors using color deconvolution
 	showStatus("Separating colors...");
 	selectWindow("orig");
@@ -402,7 +401,8 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 	close("c");
 	selectWindow("c-(Colour_1)");
 	rename("positive");
-		
+	
+	
 	// Correcting background and processing red channel
 	showStatus("Correcting background...");
 
@@ -451,15 +451,26 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 	call("ij.plugin.frame.ThresholdAdjuster.setMode", "Over/Under");
 	waitForUser("Select PicoSirius Red Threshold");
 	getThreshold(lower, upper);
-	setThreshold(0, lower);
+	setThreshold(lower, upper);
 	//setThreshold(0, redThreshold);
-	setOption("BlackBackground", false);
 	run("Convert to Mask");
-	close("Threshold");
 	
-	selectWindow("positive");
-	setBatchMode("hide");	
+	run("Invert");
+	
+	roiManager("select", "tissue");
+	run("Colors...", "foreground=white background=black selection=green");
+	run("Clear Outside");
+	
+	run("Colors...", "foreground=black background=white selection=green");
+	run("Create Selection");
+	selectWindow("orig");
+	run("Restore Selection");
+	
 	deleteROIsFun("positive","orig");
+	
+	setBatchMode("exit and display");
+	
+	setBatchMode(false);
 	
 	// Analyze particles and measure tissue and positive areas
 	selectWindow("positive");
@@ -491,6 +502,7 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 	r1 = Pm / Tm * 100;
 	
 	selectWindow("positive");
+	setBatchMode(false);
 	run("Close");
 	
 	run("Clear Results");
@@ -506,6 +518,7 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 	setResult("Positive Area (um2)", i, Pm);
 	setResult("Ratio Ared/Atissue (%)", i, r1);
 	saveAs("Results", output + "QuantificationResults_SiriusRedCardio.xls");
+
 		
 	// Finalize visualization and export
 	setBatchMode("exit and display");
@@ -531,7 +544,6 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 	close();
 	close("\\Others");
 	
-	
 	// Close opened images if necessary
 	if (InDir != "-") {
 	    close();
@@ -541,13 +553,7 @@ function sr(output,InDir,name,r,th_tissue,redThreshold,export,minSize)
 
 
 function deleteROIsFun(Mask, orig) {
-	
-	selectWindow(Mask);
-	run("Create Selection");
-    selectWindow(orig);
-    run("Restore Selection");
-	
-	// Loop to delete multiple ROIs if desired
+    // Loop to delete multiple ROIs if desired
     deleteROIs = getBoolean("Do you want to Delete other Detected Regions");
     while (deleteROIs) {
         // Prompt the user to draw a ROI to delete
@@ -563,16 +569,16 @@ function deleteROIsFun(Mask, orig) {
         
         // Apply the selection to the mask image
         selectWindow(Mask);
-        //setBatchMode("show");
+        setBatchMode("show");
         run("Restore Selection");
-        setForegroundColor(255,255,255);
+        setForegroundColor(255, 255, 255);
         run("Fill", "slice");
         run("Create Selection");
         
         // Apply the selection to the original image
         selectWindow(orig);
         run("Restore Selection");
-        //showMessage("Selection deleted");
+        showMessage("Selection deleted");
         
         // Prompt the user to delete another ROI
         selectWindow(orig);

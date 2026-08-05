@@ -103,7 +103,7 @@ function macroInfo(){
 
 var cDAPI=1, cCAV=2, cSMA=3, thCAV=35, thSMA=24;
 
-macro "IF_CellClassDoublePhenotype Action Tool 1 - Ca3fT0b10CT8b10ETfb10LTfb10L"{
+macro "IF_CardioFibroblast Action Tool 1 - Ca3fT0b10CT8b10ETfb10LTfb10L"{
 	
 	function deleteROIsFun(Mask, orig) {
 		selectWindow(Mask);  

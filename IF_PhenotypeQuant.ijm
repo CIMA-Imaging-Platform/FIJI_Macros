@@ -3,7 +3,7 @@
 function macroInfo(){
 
 	 /* TOOL for AUTOMATIC CLASSIFICATION OF CELL PHENOTYPES 
-	 *  Target User: Charlie. Carlos Sobejano
+	 *  Target User: Charlie. Bea pelacho
 	 */
 
 	scripttitle= "CHARACTERIZATION OF MARKER PHENOTYPES";
@@ -117,14 +117,14 @@ function macroInfo(){
 
 
 // Set options for debugging, expandable arrays, and wait for completion.
-setOption("DebugMode", true);
+setOption("DebugMode", false);
 setOption("ExpandableArrays", true);
 setOption("WaitForCompletion", true);
 
 // Hide row indexes in tables.
 Table.showRowIndexes(false);
 // Define default channel indices and flags for preprocessing.
-var flagContrast = true, flagSubstractBackground = true, rollingRadius=100, radSmooth=2;
+var flagContrast = false, flagSubstractBackground = true, rollingRadius=100, radSmooth=2;
 
 // Define default threshold and parameter values for segmentation.
 var phName="GFP", chMarker=1, thMarker = 35, prominence = 10, minSize = 50;
@@ -300,7 +300,7 @@ function IFphenotype(output,InDir,name,batch,chMarker,flagContrast, flagSubstrac
 
 	// Set Colors config and measurements
 	run("Colors...", "foreground=white background=black selection=green");
-	run("Set Measurements...", "area mean standard modal area_fraction redirect=None decimal=4");
+	run("Set Measurements...", "area mean standard modal area_fraction redirect=None decimal=2");
 
 	// Set batch mode
 	setBatchMode(batch);

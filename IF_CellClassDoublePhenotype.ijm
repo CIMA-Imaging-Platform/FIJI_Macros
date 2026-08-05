@@ -1,156 +1,217 @@
-
+/**
+ * Displays an HTML dialog with information about the macro, its purpose,
+ * author details, expected inputs, and output measurements.
+ */
 function macroInfo(){
 	
-// * Automatic Cell Classification based on Single and Double Phenotypes
-// * Target User: Sheila
-// *  
-
+	// * Automatic Cell Classification based on Single and Double Phenotypes
+	// * Target User: Imaging Core Users / Sheila
+	
 	scripttitle= "Automatic Cell Classification based on Single and Double Phenotypes";
-	version= "1.01";
-	date= "2024";
+	version= "1.02";
+	date= "2026";
 	
-// *  Tests Images:
-
-	imageAdquisition=" VECTRA POLARIS Images: 4 Channel: DAPI + 3 Markers: RNA, HDV , Virus";
-	imageType="2D 8 bit ";  
-	voxelSize="Voxel size: unknown um xy";
-	format="Format: Uncompressed .qptiff";   
+	// * Tests Images:
+	imageAdquisition="Confocal / Fluorescent Images: Minimum 3 Channels (DAPI + Marker1 + Marker2)";
+	imageType="2D / Multichannel Composite";  
+	voxelSize="Voxel size: Read from metadata";
+	format="Format: Bio-Formats compatible (e.g., czi, .tif)";   
  
- //*  GUI User Requierments:
- //*    - Choose parameters.
- //*    - Single File and Batch Mode
- //*    
- // Important Parameters: click Im or Dir + right button 
-	
-	parameter1="DAPI, Alb, HDV, F480 Channel Order"; 
+	//* GUI User Requirements:
+	parameter1="Channel indices, marker names, thresholds, and DAPI smoothing/separation variables."; 
 	 
- //  2 Action tools:
-	buttom1="RNA: Single File processing";
- //	buttom2="DIR: Batch Mode. Select Folder: All images within the folder will be quantified";
+	//  Action tools:
+	buttom1="Im: Single File processing with UI Dialog";
 
-//  OUTPUT
-
-// Analyzed Images with ROIs
-
-	excel="QuantificationResults.xls";
+	//  OUTPUT
+	excel="QuantificationResults_IFCellClassDoublePhenotype.xls";
 	feature1="Tissue Area (um^2)";
-	feature2="# Cells";
-	feature3="# Alb+ cells";
-	feature4="# HDV+ cells"; 
-	feature5="# F480+ cells"; 
-	feature6="# Alb-HDV+ cells"; 
-	feature7="# HDV-F480+ cells"; 
-/*
- *  version: 1.01 
- *  Author: Mikel Ariz  
- *  Commented by: Tomas Muñoz 2024 
- *  Date : 2024
- *  
- */
-
-//	MIT License
-//	Copyright (c) 2023 Tomas Muñoz tmsantoro@unav.es
-//	Permission is hereby granted, free of charge, to any person obtaining a copy
-//	of this software and associated documentation files (the "Software"), to deal
-//	in the Software without restriction, including without limitation the rights
-//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//	copies of the Software, and to permit persons to whom the Software is
-//	furnished to do so, subject to the following conditions:
-//	The above copyright notice and this permission notice shall be included in all
-//	copies or substantial portions of the Software.
-//	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//	SOFTWARE.
-
+	feature2="# Cells (Total DAPI Nuclei)";
+	feature3="# Marker 1 cells (e.g., GFP/ALB)";
+	feature4="# Marker 2 cells (e.g., F480/HDV)"; 
+	feature5="# DoublePositive cells (Marker 1 + Marker 2)"; 
 	
+	/*
+	 * Version: 1.02 
+	 * Author: Tomas Muñoz 2026 
+	 * Date : 2026
+	 */
+
+	//	MIT License
+	//	Copyright (c) 2026 Tomas Muñoz tmsantoro@unav.es
+	//	Permission is hereby granted, free of charge, to any person obtaining a copy
+	//	of this software and associated documentation files (the "Software"), to deal
+	//	in the Software without restriction, including without limitation the rights
+	//	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	//	copies of the Software, and to permit persons to whom the Software is
+	//	furnished to do so, subject to the following conditions:
+	//	The above copyright notice and this permission notice shall be included in all
+	//	copies or substantial portions of the Software.
+
 	showMessage("ImageJ Script", "<html>"
 		+"<style>h{margin-top: 5px; margin-bottom: 5px;} p{margin: 0px;padding: 0px;} ol{margin-left: 20px;padding: 5px;} #list-style-3 {list-style-type: circle;.container {max-width: 1200px; margin: 0 auto; padding: 0px; }</style>"
-	    +"<h1><font size=6 color=Teal href=https://cima.cun.es/en/research/technology-platforms/image-platforms>CIMA: Imaging Platform</h1>"
-	    +"<h1><font size=5 color=Purple><i>Software Development Service</i></h1>"
-	    +"<p><font size=2 color=Purple><i>ImageJ Macros</i></p>"
-	    +"<h2><font size=3 color=black>"+scripttitle+"</h2>"
-	    +"<p><font size=2>Modified by Tomas Mu&ntilde;oz Santoro</p>"
-	    +"<p><font size=2>Version: "+version+" ("+date+")</p>"
-	    +"<p><font size=2> contact tmsantoro@unav.es</p>" 
-	    +"<p><font size=2> Available for use/modification/sharing under the "+"<p4><a href=https://opensource.org/licenses/MIT/>MIT License</a></p>"
-	    +"<h2><font size=3 color=black>Developed for</h2>"
-	    +"<p><font size=3  i>Input Images</i></p>"
-	    +"<ul id=list-style-3><font size=2  i><li>"+imageAdquisition +"</li><li>"+imageType+"</li><li>"+voxelSize+"</li><li>"+format+"</li></ul>"
-	    +"<p><font size=3 i>Action tools (Buttons)</i></p>"
-	    +"<ol><font size=2  i><li>"+buttom1+"</li></ol>"
-	    +"<p><font size=3  i>PARAMETERS: </i></p>"
-	    +"<ul id=list-style-3><font size=2  i>"
-	    +"<li>"+parameter1+"</li></ul>"
-	    +"<p><font size=3  i>Quantification Results: </i></p>"
-	    +"<p><font size=3 i>AnalyzedImages folder: Visualize Segmented Images</i></p>"
-	    +"<p><font size=3  i>Excel "+excel+"</i></p>"
-	    +"<ul id=list-style-3><font size=2  i><li>"+feature1+"</li><li>"+feature2+"</li><li>"+feature3+"</li><li>"+feature4+"</li><li>"+feature5+"</li><li>"+feature6+"</li><li>"+feature7+"</li></ul>"
-	    +"<h0><font size=5></h0>"
-	    +"");
-
-	   //+"<P4><font size=2> For more detailed instructions see "+"<p4><a href=https://www.protocols.io/edit/movie-timepoint-copytoclipboard-tool-chutt6wn>Protocols.io</a><h4> </P4>"
+		+"<h1><font size=6 color=Teal href=https://cima.cun.es/en/research/technology-platforms/image-platforms>CIMA: Imaging Platform</h1>"
+		+"<h1><font size=5 color=Purple><i>Software Development Service</i></h1>"
+		+"<p><font size=2 color=Purple><i>ImageJ Macros</i></p>"
+		+"<h2><font size=3 color=black>"+scripttitle+"</h2>"
+		+"<p><font size=2>Modified by Tomas Mu&ntilde;oz Santoro</p>"
+		+"<p><font size=2>Version: "+version+" ("+date+")</p>"
+		+"<p><font size=2> contact tmsantoro@unav.es</p>" 
+		+"<p><font size=2> Available for use/modification/sharing under the "+"<p4><a href=https://opensource.org/licenses/MIT/>MIT License</a></p>"
+		+"<h2><font size=3 color=black>Developed for</h2>"
+		+"<p><font size=3  i>Input Images</i></p>"
+		+"<ul id=list-style-3><font size=2  i><li>"+imageAdquisition +"</li><li>"+imageType+"</li><li>"+voxelSize+"</li><li>"+format+"</li></ul>"
+		+"<p><font size=3 i>Action tools (Buttons)</i></p>"
+		+"<ol><font size=2  i><li>"+buttom1+"</li></ol>"
+		+"<p><font size=3  i>PARAMETERS: </i></p>"
+		+"<ul id=list-style-3><font size=2  i>"
+		+"<li>"+parameter1+"</li></ul>"
+		+"<p><font size=3  i>Quantification Results: </i></p>"
+		+"<p><font size=3 i>AnalyzedImages folder: Visualize Segmented Images with multi-point ROIs</i></p>"
+		+"<p><font size=3  i>Excel: "+excel+"</i></p>"
+		+"<ul id=list-style-3><font size=2  i><li>"+feature1+"</li><li>"+feature2+"</li><li>"+feature3+"</li><li>"+feature4+"</li><li>"+feature5+"</li></ul>"
+		+"<h0><font size=5></h0>"
+		+"");
 }
 
 
-var cDAPI=1, cHDV=3, cALB=2, cF480=4, nuclEnlargement=2;
+var cDAPI=3, cMarker1=2, cMarker2=1, nuclEnlargement=2, nameMarker1="GFP", nameMarker2="Actinina";
+var thDapi=20, thMarker1=25, thMarker2=25, findMaximaDetect=5, meanRadius=2;
 
 
-macro "IF_CellClassDoublePhenotype Action Tool 1 - Ca3fT0b10CT8b10ETfb10LTfb10L"{
-	
-	/**
-	 * Analyzes a confocal microscopy image stack to quantify cell phenotypes.
-	 * 
-	 * This macro performs the following steps:
-	 * 1. Opens a single file selected by the user.
-	 * 2. Sets up dialog for choosing channel numbers.
-	 * 3. Performs tissue segmentation and calculates tissue area.
-	 * 4. Segments nuclei from DAPI channel.
-	 * 5. Segments other markers (tested with ALB, HDV, F480) to identify different cell types.
-	 * 6. Counts cells positive for each marker.
-	 * 7. Saves ROIs and results.
-	 * 8. Draws markers on the image for visualization.
-	 * 9. Saves the analyzed image.
-	 * 
-	 * @param {number} cDAPI - Channel number for DAPI staining.
-	 * @param {number} cHDV - Channel number for HDV staining.
-	 * @param {number} cALB - Channel number for ALB staining.
-	 * @param {number} cF480 - Channel number for F480 staining.
-	 * @param {number} nuclEnlargement - Enlargement factor for nuclei segmentation.
-	 * @param {number} sigma - The standard deviation for Gaussian blur in background subtraction.
-	 */
-	
+macro "IF_CellClassDoublePhenotype Action Tool 1 - Cf00T2d15IT6d10m"{
+		
+	close("*");
+	roiManager("reset");
+	run("Clear Results");
 		
 	macroInfo();
+	file=File.openDialog("Select File");
+	openFileFormat(file);
 	
-	/* TESTING PARAMS
-	cDAPI=1;
-	cHDV=3;
-	cALB=2;
-	cF480=4;
-	nuclEnlargement=2;
-	*/
-		
-	// Open just one file
-	name=File.openDialog("Select File");	
-	run("Bio-Formats", "open=["+name+"] autoscale color_mode=Composite view=Hyperstack stack_order=XYCZT");
-		
 	Dialog.create("Channels");
-	Dialog.addMessage("Choose channel numbers");	
-	Dialog.addNumber("DAPI", cDAPI);	
-	Dialog.addNumber("ALB", cALB);	
-	Dialog.addNumber("HDV", cHDV);
-	Dialog.addNumber("F480", cF480);
+	Dialog.addMessage("Nuclei Parameters");	
+	Dialog.addNumber("Channel", cDAPI);
+	Dialog.addNumber("Threshold", thDapi);
+	Dialog.addNumber("Blurring", meanRadius);
+	Dialog.addNumber("Separation", findMaximaDetect);
+	Dialog.addMessage("Marker 1 Parameters");	
+	Dialog.addString("Name", nameMarker1);
+	Dialog.addNumber("Channel", cMarker1);	
+	Dialog.addNumber("Threshold", thMarker1);	
+	Dialog.addMessage("Marker 2 Parameters");	
+	Dialog.addString("Name", nameMarker2);
+	Dialog.addNumber("Channels", cMarker2);
+	Dialog.addNumber("Threshold", thMarker2);
+	options = newArray("Manual","Automatic","BatchMode");
+	Dialog.addChoice("Thresholds Selection", options);
 	Dialog.show();	
+		
+	
 	cDAPI= Dialog.getNumber();
-	cALB= Dialog.getNumber();
-	cHDV= Dialog.getNumber();
-	cF480= Dialog.getNumber();
+	thDapi= Dialog.getNumber();
+	meanRadius= Dialog.getNumber();
+	findMaximaDetect= Dialog.getNumber();
+	var nameMarker1 = Dialog.getString();
+	cMarker1= Dialog.getNumber();
+	thMarker1= Dialog.getNumber();
+	var nameMarker2 = Dialog.getString();
+	cMarker2= Dialog.getNumber();
+	thMarker2= Dialog.getNumber();
+	auto = Dialog.getChoice();
+	
+	close("*");
+	
+	print("\\Clear");
+	print(">>> Starting Single File Processing ");
+	print("> Processing file --> "+file);
+	doublePhenotypeDetection('-',file, cDAPI,cMarker1,cMarker2,thDapi,meanRadius,findMaximaDetect,thMarker1,thMarker2,auto);
+	print(">>> Quantification Complete!");
+}
+	
+	
+macro "IF_CellClassDoublePhenotype Action Tool 2 - C00fT0b11DT9b09iTcb09r"{
+	
+	macroInfo(); // Run predefined macro to gather information
+	
+	Dialog.create("Channels");
+	Dialog.addMessage("Nuclei Parameters");	
+	Dialog.addNumber("Channel", cDAPI);
+	Dialog.addNumber("Threshold", thDapi);
+	Dialog.addNumber("Blurring", meanRadius);
+	Dialog.addNumber("Separation", findMaximaDetect);
+	Dialog.addMessage("Marker 1 Parameters");	
+	Dialog.addString("Name", nameMarker1);
+	Dialog.addNumber("Channel", cMarker1);	
+	Dialog.addNumber("Threshold", thMarker1);	
+	Dialog.addMessage("Marker 2 Parameters");	
+	Dialog.addString("Name", nameMarker2);
+	Dialog.addNumber("Channels", cMarker2);
+	Dialog.addNumber("Threshold", thMarker2);
+	options = newArray("Manual","Automatic","BatchMode");
+	Dialog.addChoice("Thresholds Selection", options);
+	Dialog.show();	
 		
-		
+	
+	cDAPI= Dialog.getNumber();
+	thDapi= Dialog.getNumber();
+	meanRadius= Dialog.getNumber();
+	findMaximaDetect= Dialog.getNumber();
+	var nameMarker1 = Dialog.getString();
+	cMarker1= Dialog.getNumber();
+	thMarker1= Dialog.getNumber();
+	var nameMarker2 = Dialog.getString();
+	cMarker2= Dialog.getNumber();
+	thMarker2= Dialog.getNumber();
+	auto = Dialog.getChoice();
+	
+
+	
+	close("*"); // Close all open windows
+	roiManager("Reset"); // Reset ROI manager
+	run("Clear Results"); // Clear previous results
+
+    InDir=getDirectory("Choose a Directory");
+	list=getFileList(InDir);
+	L=lengthOf(list);
+
+	print("\\Clear");
+	print(">>> Starting Batch Mode Processing...");
+	print(">>> Found " + L + " files in directory: " + InDir);
+
+	for (j=0; j<L; j++)
+	{
+		file = list[j];
+		print("=====================================================");
+		print(">>> Processing File (" + (j+1) + "/" + L + "): " + file);
+		doublePhenotypeDetection(InDir,file, cDAPI,cMarker1,cMarker2,thDapi,meanRadius,findMaximaDetect,thMarker1,thMarker2,auto);
+		close("*");
+	}
+    print(">>> Batch Mode Complete!");
+    Dialog.create("DONE!");
+    Dialog.show();
+}
+	
+/**
+ * Core processing pipeline: Segments tissue, detects nuclei, segments two cellular markers,
+ * calculates colocalization, saves ROIs, outputs cell counts to an Excel file, and generates
+ * a combined visualization image.
+ *
+ * @param {string} InDir - The input directory containing the image (use '-' for single file).
+ * @param {string} file - The name or path of the file to process.
+ * @param {number} cDAPI - Channel index for the DAPI (nuclei) staining.
+ * @param {number} cMarker1 - Channel index for the first marker.
+ * @param {number} cMarker2 - Channel index for the second marker.
+ * @param {number} thDapi - Threshold value to segment DAPI.
+ * @param {number} meanRadius - Radius for mean filtering the DAPI channel.
+ * @param {number} findMaximaDetect - Prominence value for detecting distinct nuclei (Find Maxima).
+ * @param {number} thMarker1 - Threshold value to segment Marker 1.
+ * @param {number} thMarker2 - Threshold value to segment Marker 2.
+ * @param {boolean} auto - If true, applies 'Huang dark' auto-thresholding instead of manual values.
+ */
+function doublePhenotypeDetection(InDir,file, cDAPI,cMarker1,cMarker2,thDapi,meanRadius,findMaximaDetect,thMarker1,thMarker2,auto){
+	
+	print("--- Initializing environment and loading image...");
 	// Clear initialization of ROI manager and results table
 	run("Collect Garbage");
 	roiManager("Reset");
@@ -162,9 +223,18 @@ macro "IF_CellClassDoublePhenotype Action Tool 1 - Ca3fT0b10CT8b10ETfb10LTfb10L"
 	// Set color configuration and measurements
 	run("Colors...", "foreground=white background=black selection=green");
 	run("Set Measurements...", "area mean redirect=None decimal=2");
-		
+	
+	if (InDir != "-") {
+		file=InDir+file;
+		openFileFormat(file);
+	}else{
+		openFileFormat(file);
+	}		
+	
 	// Set batch mode 
-	setBatchMode(true);
+	if(auto == "Automatic"){setBatchMode(true);}
+	else if (auto == "Manual"){setBatchMode(false);}
+	else if (auto = "BatchMode"){setBatchMode(true);}
 	
 	// Get file information
 	MyTitle=getTitle();
@@ -172,30 +242,24 @@ macro "IF_CellClassDoublePhenotype Action Tool 1 - Ca3fT0b10CT8b10ETfb10LTfb10L"
 		
 	OutDir = output+File.separator+"AnalyzedImages";
 	File.makeDirectory(OutDir);
-		
-	aa = split(MyTitle,".");
-	MyTitle_short = aa[0];
 	
 	getDimensions(width, height, channels, slices, frames);
 	getVoxelSize(width, height, depth, unit);
 		
 	// TISSUE SEGMENTATION
+	print("--- Step 1: Segmenting overall tissue area...");
+	run("Make Composite");
 	run("Duplicate...", "title=merge duplicate ");
 	run("RGB Color");
 	run("RGB to Luminance");
 	rename("merge");
+	
 	// Convert image to binary mask
-	setThreshold(6, 255);
+	run("Subtract Background...", "rolling=500");
+	setThreshold(15, 255);
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
 	run("Median...", "radius=6");
-	
-	// Analyze particles to identify tissue regions
-	run("Analyze Particles...", "size=20000-Infinity show=Masks exclude in_situ");
-	run("Invert");
-	run("Analyze Particles...", "size=1000-Infinity show=Masks in_situ");
-	run("Invert");
-	run("Keep Largest Region");
 	
 	// Add segmented tissue region to ROI manager
 	roiManager("Show None");
@@ -207,8 +271,8 @@ macro "IF_CellClassDoublePhenotype Action Tool 1 - Ca3fT0b10CT8b10ETfb10LTfb10L"
 	tissueArea=getResult("Area", 0);
 	run("Select None");
 	close("merge");
-	close("merge-largest");
-	
+	print("    Tissue Area found: " + tissueArea + " um^2");
+
 	// Post-processing: Clear outside tissue region
 	selectWindow(MyTitle);
 	roiManager("select", 0);
@@ -216,27 +280,28 @@ macro "IF_CellClassDoublePhenotype Action Tool 1 - Ca3fT0b10CT8b10ETfb10LTfb10L"
 	run("Clear Outside","stack");
 	run("Select None");
 	
-	//run("Collect Garbage");
 	
-	// SEGMENT NUCLEI FROM DAPI:
-
-	// Duplicate the image and apply mean filtering
+	// SEGMENT NUCLEI FROM DAPI
+	print("--- Step 2: Segmenting nuclei from DAPI channel...");
 	selectWindow(MyTitle);
-	//cDAPI=1;
 	run("Duplicate...", "title=nucleiMask duplicate channels="+cDAPI);
-	run("Mean...", "radius=4");
+	run("8-bit");
+	run("Mean...", "radius="+meanRadius);
 	
-	// Background subtraction using GPU acceleration
-	backgroundSubstract2DGPU("nucleiMask",100)
+	run("Subtract Background...", "rolling=200");
+	run("Enhance Local Contrast (CLAHE)", "blocksize=99 histogram=256 maximum=2 mask=*None* fast_(less_accurate)");
+	run("Duplicate...", "title=EDM duplicate ");
+	
+	selectWindow("nucleiMask");
 	
 	// Apply thresholding and morphological operations to segment nuclei
-	setAutoThreshold("Otsu dark");
-	//setThreshold(8,255);
+	if(auto == "Automatic"){setAutoThreshold("Huang dark stack");}
+	else if (auto == "Manual"){run("Threshold..."); setThreshold(thDapi,255); selectWindow("Threshold"); waitForUser("Select Threshold");}
+	else if (auto == "BatchMode"){setThreshold(thDapi,255);}
+	
+	setOption("BlackBackground", false);
 	run("Convert to Mask");
-	run("Median...", "radius=2");
-	//run("Fill Holes");
 	run("Select All");
-	run("Analyze Particles...", "size=50-3500 pixel show=Masks in_situ");
 	RoiManager.selectByName("Tissue");
 	setBackgroundColor(255,255,255);
 	run("Clear Outside");
@@ -244,15 +309,12 @@ macro "IF_CellClassDoublePhenotype Action Tool 1 - Ca3fT0b10CT8b10ETfb10LTfb10L"
 	run("Select None");
 	
 	// Perform marker-controlled watershed segmentation
-	run("Duplicate...", "title=EDM duplicate ");
-	run("Distance Map");
-	run("Enhance Contrast", "saturated=0.01");
-	run("Apply LUT");
-	run("Find Maxima...", "prominence=20 light output=[Single Points]");
+	selectWindow("EDM");
+	run("Find Maxima...", "prominence="+findMaximaDetect+" output=[Single Points]");
 	rename("nucleiMaxima");
 	
 	selectWindow("nucleiMask");
-	run("Select All");;
+	run("Select None");
 	run("Duplicate...", "title=nucleiEdges");
 	run("Find Edges");
 	
@@ -265,7 +327,7 @@ macro "IF_CellClassDoublePhenotype Action Tool 1 - Ca3fT0b10CT8b10ETfb10LTfb10L"
 	run("Convert to Mask");
 	run("Create Selection");
 	Roi.setName("nuclei");
-	Roi.setStrokeColor("green");
+	Roi.setStrokeColor("blue");
 	run("Add to Manager");	// ROI2 --> Watershed NUCLEI
 	run("Select None");
 	
@@ -276,92 +338,80 @@ macro "IF_CellClassDoublePhenotype Action Tool 1 - Ca3fT0b10CT8b10ETfb10LTfb10L"
 	close("EDM");
 	selectWindow("nucleiEdges-watershed");
 	rename("nucleiMask");
-	roiManager("Save", OutDir+File.separator+MyTitle_short+"_roisDAPI.zip");
-
-	
-	//run("Collect Garbage");
+	roiManager("Save", OutDir+File.separator+MyTitle+"_roisDAPI.zip");
+	print("    Saved DAPI ROIs to zip.");
 		
-	// SEGMENT 1st MARKER: ALBUMIN membrane or nuclear marker ()
-	
-	// Duplicate the image and apply background subtraction
+	// SEGMENT 1st MARKER
+	print("--- Step 3: Segmenting Marker 1 (" + nameMarker1 + ") channel...");
 	selectWindow(MyTitle);
-	//cALB=2;
-	run("Duplicate...", "title=membraneMask duplicate channels="+cALB);
+	run("Duplicate...", "title=marker1Mask duplicate channels="+cMarker1);
+	run("8-bit");
 	
-	backgroundSubstract2DGPU("membraneMask",200.0);
+	run("Subtract Background...", "rolling=200");
+	run("Median...", "radius=1");
+		
+	if(auto == "Automatic"){setAutoThreshold("Huang dark stack");}
+	else if (auto == "Manual"){run("Threshold..."); setThreshold(thMarker1, 255); selectWindow("Threshold"); waitForUser("Select Threshold");}
+	else if (auto == "BatchMode"){setThreshold(thMarker1,255);}
 	
-	// Apply thresholding and morphological operations to segment Albumin marker
-	setThreshold(6, 255);
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
 	run("Median...", "radius=2");
 	run("Analyze Particles...", "size=100-Infinity pixel show=Masks in_situ");
 	run("Create Selection");
-	Roi.setName("Albumina");
-	Roi.setStrokeColor("green")
-	run("Add to Manager");	// ROI2 --> Watershed NUCLEI
+	if (selectionType() != -1) {
+		Roi.setName(nameMarker1);
+		Roi.setStrokeColor("Red");
+		run("Add to Manager");
+	} else {
+		print("    WARNING: No " + nameMarker1 + " particles found — marker mask is empty.");
+	}
 	run("Select None");
 	
-	// SEGMENT 2nd MARKER: membrane marker (HDV) Virus
+	// SEGMENT 2nd MARKER
+	print("--- Step 4: Segmenting Marker 2 (" + nameMarker2 + ") channel...");
 	selectWindow(MyTitle);
-	//cHDV=3;
 	run("Select None");
-	run("Duplicate...", "title=HDVmask duplicate channels="+cHDV);
+	run("Duplicate...", "title=marker2Mask duplicate channels="+cMarker2);
+	run("8-bit");
 	
-	backgroundSubstract2DGPU("HDVmask",100.0)
+	run("Subtract Background...", "rolling=200");
+	run("Median...", "radius=1");
 	
-	// Apply thresholding and morphological operations to segment HDV marker
-	setThreshold(15, 255);
+	if(auto == "Automatic"){setAutoThreshold("Huang dark stack");}
+	else if (auto == "Manual"){run("Threshold..."); setThreshold(thMarker2, 255); selectWindow("Threshold"); waitForUser("Select Threshold");}
+	else if (auto == "BatchMode"){setThreshold(thMarker2,255);}
+	
 	setOption("BlackBackground", false);
 	run("Convert to Mask");
-	run("Median...", "radius=1");
-	run("Analyze Particles...", "size=50-Infinity pixel show=Masks in_situ");
+	run("Median...", "radius=2");
+	run("Analyze Particles...", "size=100-Infinity pixel show=Masks in_situ");
 	run("Create Selection");
-	Roi.setName("HDV");
-	Roi.setStrokeColor("magenta");
-	run("Add to Manager");	// ROI2 --> Watershed NUCLEI
+	if (selectionType() != -1) {
+		Roi.setName(nameMarker2);
+		Roi.setStrokeColor("Green");
+		run("Add to Manager");
+	} else {
+		print("    WARNING: No " + nameMarker2 + " particles found — marker mask is empty.");
+	}
 	run("Select None");
 	
-	// SEGMENT 3rd MARKER: RNA ¿?
-	selectWindow(MyTitle);
-	//cF480=4;
-	run("Select None");
-	run("Duplicate...", "title=particleMask duplicate channels="+cF480);
 	
-	backgroundSubstract2DGPU("particleMask",30.0);
 	
-	// Apply thresholding and morphological operations to segment RNA marker
-	setThreshold(15, 255);
-	setOption("BlackBackground", false);
-	run("Convert to Mask");
-	run("Median...", "radius=1");
-	run("Analyze Particles...", "size=3-2000 pixel show=Masks in_situ");
-	run("Create Selection");
-	Roi.setName("particles");
-	Roi.setStrokeColor("yellow");
-	run("Add to Manager");	// ROI2 --> Watershed NUCLEI
-	run("Select None");
-	
-	close(MyTitle);
-
-	//run("Collect Garbage");
-	
-	// CHECK WHICH NUCLEI CONTAIN THE HDV MARKER
-	
+	// CHECK WHICH NUCLEI CONTAIN MARKER 1
+	print("--- Step 5: Calculating Colocalization for Marker 1...");
 	roiManager("Reset");
 	run("Clear Results");
 	
-	// Analyze particles to identify nuclei in the mask
 	selectWindow("nucleiMask");
 	run("Analyze Particles...", "size=1-Inf show=Masks add in_situ");
 	roiManager("Show None");
-	n = roiManager("Count");
-	nCells = n - 1;
+	nCells= roiManager("Count");
+	print("    Total DAPI cells detected: " + nCells);
 	
-	// Duplicate the nuclei mask and clear it to create the HDV-positive mask
 	selectWindow("nucleiMask");
-	run("Select All");
-	run("Duplicate...", "title=HDVpositive");
+	run("Select None");
+	run("Duplicate...", "title=marker1Positive");
 	run("Select All");
 	setBackgroundColor(255, 255, 255);
 	run("Clear", "slice");
@@ -369,365 +419,186 @@ macro "IF_CellClassDoublePhenotype Action Tool 1 - Ca3fT0b10CT8b10ETfb10LTfb10L"
 	run("Select None");
 	wait(100);
 	
-	// Measure the HDV marker in the HDV mask
-	run("Clear Results");
-	selectWindow("HDVmask");
-	run("Select None");
-	roiManager("Deselect");
-	selectWindow("HDVmask");
-	roiManager("show all without labels");
-	roiManager("Measure");
-	n = nResults;
+		
+	selectWindow("marker1Mask");
+	getStatistics(area, mean);
+	if (mean > 0) {
+		run("Select None");
+		roiManager("Deselect");
+		roiManager("Measure");
+		roiManager("Show None");
+		positiveRois = filterTableColum("Results", "Mean", ">", 0);
+		roiManager("select", positiveRois);
+		roiManager("save selected", OutDir + File.separator + MyTitle + "_roisMarker1.zip");
+		roiManager("Reset");
+		roiManager("Open", OutDir + File.separator + MyTitle + "_roisMarker1.zip");
+		selectWindow("marker1Positive");
+		run("Colors...", "foreground=black background=white selection=red");
+		roiManager("Fill");
+		nMarker1Postive = roiManager("Count");
+	} else {
+		nMarker1Postive = 0;
+		print("    WARNING: " + nameMarker1 + " mask is empty — skipping positive detection.");
+	}
 	roiManager("Show None");
-	
-	// Filter out nuclei containing the HDV marker and save the selection
-	positiveRois = filterTableColum("Results", "Mean", ">", 0);
-	
-	print("Total Cells: " + n);
-	print("Positive Cells: " + lengthOf(positiveRois));
-	roiManager("select", positiveRois);
-	roiManager("save selected", OutDir + File.separator + MyTitle_short + "_roisHDV.zip");
-	roiManager("Reset");
-	roiManager("Open", OutDir + File.separator + MyTitle_short + "_roisHDV.zip");
-	selectWindow("HDVpositive");
-	run("Colors...", "foreground=black background=white selection=green");
-	roiManager("Fill");
-	
-	nHDV = roiManager("Count");
-	nHDV = nHDV - 1;
-	run("Select None");
-	
-	roiManager("Show None");
+	print("    " + nameMarker1 + " Positive Cells: " + nMarker1Postive);
 
-	
-	//run("Collect Garbage");
-	
-	// CHECK ONE BY ONE WHICH NUCLEI CONTAIN MACROPHAGE MARKER
-	
+	// CHECK WHICH NUCLEI CONTAIN MARKER 2
+	print("--- Step 6: Calculating Colocalization for Marker 2...");
 	roiManager("Reset");
 	run("Clear Results");
 	
 	selectWindow("nucleiMask");
 	run("Analyze Particles...", "size=1-Inf show=Masks add in_situ");
-	roiManager("Show None");
 	
 	selectWindow("nucleiMask");
-	run("Select All");
-	run("Duplicate...", "title=particlePositive");
+	run("Select None");
+	run("Duplicate...", "title=marker2Positive");
 	run("Select All");
 	setBackgroundColor(255, 255, 255);
 	run("Clear", "slice");
 	setBackgroundColor(0,0,0);
 	run("Select None");
 	wait(100);
-		
-	run("Clear Results");
-	selectWindow("particleMask");
-	run("Dilate");
-	run("Dilate");
-	run("Select None");
-	roiManager("Deselect");
-	selectWindow("particleMask");
-	roiManager("Measure");
-		
-	n=nResults;
 	
-	positiveRois=filterTableColum("Results","Mean",">",0);
 	
-	print("Total Cells: "+n);
-	print("positive Cells "+lengthOf(positiveRois));
-	positiveRois=Table.getColumn("Index");
-	roiManager("select", positiveRois);
-	roiManager("save selected", OutDir+File.separator+MyTitle_short+"_roisMacro.zip");
-	roiManager("Reset");
-	roiManager("Open", OutDir+File.separator+MyTitle_short+"_roisMacro.zip");
-	selectWindow("particlePositive");
-	run("Colors...", "foreground=black background=white selection=green");
-	roiManager("Fill");
-		
-	nMacrophages=roiManager("Count");
-	nMacrophages=nMacrophages-1;
-	run("Select None");
-
+	selectWindow("marker2Mask");
+	getStatistics(area, mean);
+	if (mean > 0) {
+		run("Select None");
+		roiManager("Deselect");
+		roiManager("Measure");
+		roiManager("Show None");
+		positiveRois = filterTableColum("Results", "Mean", ">", 0);
+		roiManager("select", positiveRois);
+		roiManager("save selected", OutDir + File.separator + MyTitle + "_roisMarker2.zip");
+		roiManager("Reset");
+		roiManager("Open", OutDir + File.separator + MyTitle + "_roisMarker2.zip");
+		selectWindow("marker2Positive");
+		run("Colors...", "foreground=black background=white selection=red");
+		roiManager("Fill");
+		nMarker2Positve = roiManager("Count");
+	} else {
+		nMarker2Positve = 0;
+		print("    WARNING: " + nameMarker2 + " mask is empty — skipping positive detection.");
+	}
 	roiManager("Show None");
-	//run("Collect Garbage");
+	print("    " + nameMarker2 + " Positive Cells: " + nMarker2Positve);
 	
-	// CHECK ONE BY ONE WHICH NUCLEI CONTAIN MEMBRANE ALBUMIN MARKER
-	
-	roiManager("Reset");
-	run("Clear Results");
-	
-	selectWindow("nucleiMask");
-	run("Analyze Particles...", "size=1-Inf show=Masks add in_situ");
-	roiManager("Show None");
-	
-	selectWindow("nucleiMask");
-	run("Select All");
-	run("Duplicate...", "title=ALBpositive");
-	run("Select All");
-	setBackgroundColor(255, 255, 255);
-	run("Clear", "slice");
-	setBackgroundColor(0,0,0);
-	run("Select None");
-	wait(100);
-		
-	run("Clear Results");
-	selectWindow("membraneMask");
-	run("Dilate");
-	run("Select None");
-	roiManager("Deselect");
-	roiManager("Measure");
-	n=nResults;
-
-	positiveRois=filterTableColum("Results","Mean",">",0);
-	
-	print("Total Cells: "+n);
-	print("positive Cells "+lengthOf(positiveRois));
-	roiManager("select", positiveRois);
-	roiManager("save selected", OutDir+File.separator+MyTitle_short+"_roisALB.zip");
-	roiManager("Reset");
-	roiManager("Open", OutDir+File.separator+MyTitle_short+"_roisALB.zip");
-	selectWindow("ALBpositive");
-	run("Colors...", "foreground=black background=white selection=green");
-	roiManager("Fill");
-		
-	nAlb=roiManager("Count");
-	nAlb=nAlb-1;
-	run("Select None");
-	
-	roiManager("Show None");
-	//run("Collect Garbage");
-	
-	// CHECK CELLS THAT HAVE BOTH THE VIRUS AND THE ALBUMINA MARKERS
-	imageCalculator("AND create", "HDVpositive", "AlbuminaPositive");
-	rename("HDV-ALB_positive");
+	// CHECK CELLS THAT HAVE BOTH MARKERS (DOUBLE POSITIVE)
+	print("--- Step 7: Identifying Double Positive Cells...");
+	imageCalculator("AND create", "marker1Positive", "marker2Positive");
+	rename("Marker1-Marker2Positive");
 	roiManager("Reset");
 	run("Clear Results");
 	run("Analyze Particles...", "size=1-Inf show=Masks add in_situ");
 	roiManager("Show None");
-	nHdvAlb = roiManager("Count");
-	nHdvAlb = nHdvAlb - 1;
+	nDoublePositive = roiManager("Count");
 	run("Select None");
 	roiManager("Show None");
+	print("    Double Positive Cells: " + nDoublePositive);
 	
-	// CHECK CELLS THAT HAVE BOTH THE VIRUS AND THE PARTICLE MARKERS
-	imageCalculator("AND create", "HDVpositive", "particlePositive");
-	rename("HDV-Macrophage_positive");
-	roiManager("Reset");
+	// RESULTS 
+	print("--- Step 8: Saving quantification results to Excel...");
 	run("Clear Results");
-	run("Analyze Particles...", "size=1-Inf show=Masks add in_situ");
-	roiManager("Show None");
-	nHdvMacro = roiManager("Count");
-	nHdvMacro = nHdvMacro - 1;
-	run("Select None");
-	roiManager("Show None");
-
-	// RESULTS--
-	
-	// Write results:
-	run("Clear Results");
-	if (File.exists(output + File.separator + "QuantificationResults.xls")) {
+	if (File.exists(output + File.separator + "QuantificationResults_IFCellClassDoublePhenotype"+nameMarker1+nameMarker2+".xls")) {
 	    // if exists add and modify
-	    open(output + File.separator + "QuantificationResults.xls");
+	    open(output + File.separator + "QuantificationResults_IFCellClassDoublePhenotype"+nameMarker1+nameMarker2+".xls");
 	    IJ.renameResults("Results");
 	}
 	i = nResults;
 	setResult("Label", i, MyTitle);
 	setResult("Tissue Area (um^2)", i, tissueArea);
 	setResult("# Cells", i, nCells);
-	setResult("# Alb+ cells", i, nAlb);
-	setResult("# HDV+ cells", i, nHDV);
-	setResult("# F480+ cells", i, nMacrophages);
-	setResult("# Alb-HDV+ cells", i, nHdvAlb);
-	setResult("# HDV-F480+ cells", i, nHdvMacro);
-	saveAs("Results", output + File.separator + "QuantificationResults.xls");
+	setResult("# "+nameMarker1+" cells", i, nMarker1Postive);
+	setResult("# "+nameMarker2+" cells", i, nMarker2Positve);
+	setResult("# DoublePositive cells", i, nDoublePositive);
+	saveAs("Results", output + File.separator + "QuantificationResults_IFCellClassDoublePhenotype"+nameMarker1+nameMarker2+".xls");
 	
 	run("Collect Garbage");
-	
 	setBatchMode("exit and display");
 	roiManager("Show None");
 	roiManager("Show None");
 	
 	close("*ask");
-
 	
-	// DRAW--
-	
-	// Select the merged image window and clear any existing selections
-	selectWindow("merge");
+	// DRAW (Visualization)
+	print("--- Step 9: Drawing marker visualization on output image...");
+	selectWindow("merge (RGB)");
 	run("Select None");
-	
-	// Select the HDV-positive window and clear any existing selections
-	selectWindow("HDVpositive");
+	selectWindow("marker1Positive");
 	run("Select None");
-	
-	// Find maxima in the HDV-positive image and mark them with magenta points
 	run("Find Maxima...", "noise=10 output=[Point Selection] light");
 	setTool("multipoint");
-	run("Point Tool...", "type=Hybrid color=Magenta cross=Magenta marker=Small");
-	
-	// If there are HDV-positive cells, restore the selection in the merged image
-	selectWindow("merge");
-	if (nHDV != 0) {
+	run("Point Tool...", "type=Hybrid color=Red cross=Magenta marker=Small");
+	selectWindow("merge (RGB)");
+	if (nMarker1Postive != 0) {
 	    run("Restore Selection");
 	}
-	
-	// Enhance contrast and flatten the image
-	run("In [+]", " ");
-	run("In [+]", " ");
-	run("In [+]", " ");
-	run("In [+]", " ");
-	run("In [+]", " ");
-	run("In [+]", " ");
-	run("In [+]", " ");
-	run("In [+]", " ");
-	run("In [+]", " ");
-	run("In [+]", " ");
-	run("In [+]", " ");
+	// Emulate "Ctrl + F" drawing on overlay
+	run("In [+]", " "); run("In [+]", " "); run("In [+]", " "); run("In [+]", " ");
+	run("In [+]", " "); run("In [+]", " "); run("In [+]", " "); run("In [+]", " ");
+	run("In [+]", " "); run("In [+]", " "); run("In [+]", " ");
 	run("Flatten");
+	close("marker1Positive");
 	
-	// Rename and close windows
-	rename("hdv");
+	rename("firstMarker");
 	wait(200);
-	close("merge");
-	close("HDVpositive");
+	close("merge (RGB)");
 	
-	// Repeat the same process for ALB-positive and particle-positive windows
-    // Marking ALB-positive cells with green points and particle-positive cells with yellow points
-	
-	selectWindow("ALBpositive");
+    selectWindow("marker2Positive");
 	run("Select None");
 	run("Find Maxima...", "noise=10 output=[Point Selection] light");
 	setTool("multipoint");
 	run("Point Tool...", "type=Hybrid selection=Green cross=Green marker=Small");
-	selectWindow("hdv");
-	if (nAlb!=0) {
+	selectWindow("firstMarker");
+	if (nMarker2Positve!=0) {
 		run("Restore Selection");
 	}
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
+	run("In [+]"); run("In [+]"); run("In [+]"); run("In [+]"); run("In [+]");
+	run("In [+]"); run("In [+]"); run("In [+]"); run("In [+]"); run("In [+]");
 	run("In [+]");
 	run("Flatten");
-	rename("hdv_alb");
+	rename("secondMaker");
 	wait(1000);
-	close("hdv");
-	close("ALBpositive");
+	close("firstMarker");
+	close("marker2*");
 	
-	// Repeat the same process as above with particle-positive cells
-
-	
-	selectWindow("particlePositive");
+	selectWindow("Marker1-Marker2Positive");
 	run("Select None");
 	run("Find Maxima...", "noise=10 output=[Point Selection] light");
 	setTool("multipoint");
-	run("Point Tool...", "type=Hybrid selection=Yellow cross=Yellow marker=Small");
-	selectWindow("hdv_alb");
-	if (nMacrophages!=0) {
+	run("Point Tool...", "type=Hybrid selection=Magenta cross=Yellow marker=Small");
+	selectWindow("secondMaker");
+	if (nDoublePositive!=0) {
 		run("Restore Selection");
 	}
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
+	run("In [+]"); run("In [+]"); run("In [+]"); run("In [+]"); run("In [+]");
+	run("In [+]"); run("In [+]"); run("In [+]"); run("In [+]"); run("In [+]");
 	run("In [+]");
 	run("Flatten");
-	rename("hdv_alb_macro");
+	rename("thirdMarker");
 	wait(200);
-	close("hdv_alb");
-	close("particlePositive");
-
-	// Repeat the process for HDV-ALB-positive and HDV-Macrophage-positive windows
-	// Marking HDV-ALB-positive cells with red and HDV-Macrophage-positive cells with yellow points
-
+	close("secondMaker");
 	
-	
-	selectWindow("HDV-ALB_positive");
-	run("Select None");
-	run("Find Maxima...", "noise=10 output=[Point Selection] light");
-	setTool("multipoint");
-	run("Point Tool...", "type=Hybrid selection=Red cross=Green marker=Small");
-	selectWindow("hdv_alb_macro");
-	if (nHdvAlb!=0) {
-		run("Restore Selection");
-	}
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("Flatten");
-	rename("hdv_alb_macro_HA");
-	wait(200);
-	close("hdv_alb_macro");
-	close("HDV-ALB_positive");
-	
-	selectWindow("HDV-Macrophage_positive");
-	run("Select None");
-	run("Find Maxima...", "noise=10 output=[Point Selection] light");
-	setTool("multipoint");
-	run("Point Tool...", "selection=Red cross=Yellow marker=Small");
-	selectWindow("hdv_alb_macro_HA");
-	if (nHdvMacro!=0) {
-		run("Restore Selection");
-	}
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("In [+]");
-	run("Flatten");
-	rename("hdv_alb_macro_HA_HM");
-	close("hdv_alb_macro_HA");
-	wait(200);
-	close("HDV-Macrophage_positive");
-	
-	selectWindow("hdv_alb_macro_HA_HM");
-	saveAs("Jpeg", OutDir+File.separator+MyTitle_short+"_analyzed.jpg");
+	selectWindow("thirdMarker");
+	saveAs("Jpeg", OutDir+File.separator+MyTitle+"_analyzed.jpg");
 	wait(100);
-	rename(MyTitle_short+"_analyzed.jpg");
-	
-	close("*");
+	rename(MyTitle+"_analyzed.jpg");
 	setBatchMode("exit and display");
+	close("\\Others");
 	setTool("zoom");
-	showMessage("Done!");
 	
-
+	print("--- Done generating visualization!");
 }
 
+/**
+ * Subtracts background from an image using CLIJ/CLIJx GPU acceleration.
+ * (Note: Currently disabled/commented out in the main pipeline).
+ * * @param {string} name - The title of the input image window.
+ * @param {number} sigma - The standard deviation for the Gaussian blur applied during subtraction.
+ */
 function backgroundSubstract2DGPU(name, sigma) {
-	
-	/**
-	 * Subtracts background from an image using GPU acceleration.
-	 * 
-	 * @param {string} name - The name of the input image.
-	 * @param {number} sigma - The standard deviation for Gaussian blur.
-	 */
 	// Load CLIJ GPU accelerator and CLIJ2 Macro Extensions
 	run("CLIJx Version 0.32.1.1");
 	run("CLIJ2 Macro Extensions", "cl_device=[NVIDIA GeForce RTX 4060 Laptop GPU]");
@@ -762,30 +633,18 @@ function backgroundSubstract2DGPU(name, sigma) {
 	selectWindow(image2);
 	rename(name);
 }
-
 	
-	
+/**
+ * Filters the ImageJ Results table to isolate rows that meet a specific condition,
+ * and returns the array of corresponding original row indices.
+ * * @param {string} tableName - The title/name of the Results table to evaluate.
+ * @param {string} columnName - The header of the column to check (e.g., "Mean").
+ * @param {string} filterType - The logic operator ("<" or ">").
+ * @param {number} threshold - The threshold value to filter against.
+ * @return {array} positiveRois - An array containing the "Index" values of rows that passed the filter.
+ */
 function filterTableColum(tableName, columnName, filterType, threshold)
 {
-	
-	/**
-	 * Filters a table column based on a given threshold.
-	 * 
-	 * @param {string} tableName - The name of the table window.
-	 * @param {string} columnName - The name of the column to filter.
-	 * @param {string} filterType - The type of filtering ("<" for values less than, ">" for values greater than).
-	 * @param {number} threshold - The threshold value for filtering.
-	 * @return {array} positiveRois - An array containing the indices of rows that meet the filtering criteria.
-	 */
-	 
-
-	 //TEST PARAMETERS
-	 /*
-	 tableName="Results";
-	 columnName="Mean";
-	 filterType=">";
-	 threshold=0;*/
-	 
 	// Select the table window
 	selectWindow(tableName);
 	
@@ -805,26 +664,34 @@ function filterTableColum(tableName, columnName, filterType, threshold)
 	column = Table.getColumn(columnName);
 	
 	// Loop through the values in the column
+	found = false;
 	for (i = 0; i < lengthOf(column); i++) {
 		// Get the value at the current position
 		value = column[i];
-		
+
 		// Check if the filter type is "<"
 		if (filterType == "<") {
 			// If the value is greater than the threshold, delete rows below the current position
 			if (value > threshold) {
 				selectWindow(tableName);
 				Table.deleteRows(i, lengthOf(column) - 1);
+				found = true;
 				break;
 			}
 		} else if (filterType == ">") {
 			// If the value is greater than the threshold, delete rows above the current position
 			if (value > threshold) {
 				selectWindow(tableName);
-				Table.deleteRows(0, i - 1);
+				if (i > 0) Table.deleteRows(0, i - 1);
+				found = true;
 				break;
 			}
 		}
+	}
+	// No value passed the ">" filter: all means are 0 → no positive cells → clear table so marker mask stays white
+	if (filterType == ">" && !found) {
+		selectWindow(tableName);
+		Table.deleteRows(0, lengthOf(column) - 1);
 	}
 	
 	// Get the updated indices of rows that meet the filtering criteria
@@ -834,4 +701,20 @@ function filterTableColum(tableName, columnName, filterType, threshold)
 	return positiveRois;
 }
 
-
+/**
+ * Utility function to correctly open different image formats via standard ImageJ
+ * protocols or through Bio-Formats depending on the file extension.
+ * * @param {string} file - The file path to evaluate and open.
+ */
+function openFileFormat(file){
+			
+	if(endsWith(file,".jpg")||endsWith(file,".tif")){
+		if (!endsWith(file,"ome.tif")){
+			open(file);
+		}else{
+			run("Bio-Formats", "open=["+file+"] autoscale color_mode=Composite rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT series_1");
+		}
+	}else if(endsWith(file,".czi") || endsWith(file,".svs") || endsWith(file,"ome.tif")){
+		run("Bio-Formats", "open=["+file+"] autoscale color_mode=Composite rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT series_1");
+	}
+}

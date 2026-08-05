@@ -1,5 +1,3 @@
-// WSI MeasureDistances Measurement Macro
-
 function macroInfo(){
     
 // * Quantification of Distances on WSI Images  
@@ -99,8 +97,6 @@ function macroInfo(){
 }
 
 
-
-
 var r = 0.502; // Default resolution (um/pixel)
 
 macro "WSI MeasureDistances Measurement Action Tool 1  - Cf00T2d15IT6d10m" {
@@ -121,9 +117,19 @@ macro "WSI MeasureDistances Measurement Action Tool 1  - Cf00T2d15IT6d10m" {
         exit();
     }
     
+    
     // Get the directory of the opened image and use it as output path
     MyTitle = getTitle();
     imgDir = File.directory;
+    
+    // check image channels encoding
+    getDimensions(width, height, channels, slices, frames);  
+    if (channels > 1){
+    	run("Make Composite");
+		run("RGB Color");
+		close(MyTitle);
+		rename(MyTitle);
+	}
 
     // 2. Ask user for resolution
     Dialog.create("Acquisition Resolution");
@@ -145,13 +151,26 @@ macro "WSI MeasureDistances Measurement Action Tool 1  - Cf00T2d15IT6d10m" {
         showMessage("No lines found", "No lines were added to the ROI Manager.");
         exit();
     }
-
+	
+	lengths = Table.getColumn("Length");
+	
+	run("Clear Results");
+	close("Results");
+		
+    savePath = imgDir + "WSI_DermisThickness.xls";
+    
+	if (File.exists(savePath)) {
+		open(savePath);
+		selectWindow("WSI_DermisThickness.xls");
+		wait(10);
+  		IJ.renameResults("Results");
+  	}
+  	        	
     // Add overlay with line lengths (in microns)
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < lengthOf(lengths); i++) {
     	roiManager("Show All with labels");
         roiManager("select", i);
-        lengthPx = getResult("Length", i);
-        lengthUm = lengthPx * r;
+        lengthUm = lengths[i] * r;
         Roi.setName("ROI_"+i);
         Roi.setStrokeColor("green"); // Changed from "red" or "blue" to "green"
         Roi.setStrokeWidth(2);
@@ -160,26 +179,22 @@ macro "WSI MeasureDistances Measurement Action Tool 1  - Cf00T2d15IT6d10m" {
         // Place the label at the midpoint of the line
         midX = (x[0] + x[1]) / 2;
         midY = (y[0] + y[1]) / 2;
-        makeText(d2s(lengthUm, 2) + "µm", midX, midY);
+        makeText(d2s(lengthUm, 2) + "um", midX, midY);
         setFont("SansSerif", 25, "bold");
         setForegroundColor(0, 255, 0); // Green text
         Overlay.addSelection();
+        
+        pos = nResults ;
+        
+		setResult("[Label]", pos, MyTitle+"_ROI_"+(i+1)+"");
+	    setResult("Length_um", pos, lengthUm);
     }
    
-   Overlay.show();
+    Overlay.show();
 
     // 5. Save results to XLS
-
-    savePath = imgDir + "WSI_DermisThickness.xls";
-    // Convert pixel lengths to um and save, also save angle
-    for (i = 0; i < nResults; i++) {
-        lengthPx = getResult("Length", i);
-        setResult("Length_um", i, lengthPx * r);
-        angle = getResult("Angle", i);
-        setResult("Angle_deg", i, angle);
-    }
-    saveAs("Results", savePath);
-
+   saveAs("Results", savePath);
+ 
     // 6. Flatten overlay and save image as JPG
     run("Flatten"); // This merges overlay into the image
     saveImagePath = imgDir + MyTitle+"_Analyzed.jpg";
